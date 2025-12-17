@@ -38,6 +38,9 @@ echo "Downloading macsetup ${LATEST}..."
 curl -sL "$URL" -o "$BINARY"
 chmod +x "$BINARY"
 
+# Remove quarantine attribute to prevent Gatekeeper from blocking execution
+xattr -d com.apple.quarantine "$BINARY" 2>/dev/null || true
+
 echo -e "${GREEN}✓${NC} Downloaded successfully"
 echo ""
 
