@@ -12,6 +12,7 @@ A TUI-based onboarding tool for setting up fresh MacBooks. It installs Homebrew,
 *   **Interactive TUI**: Select exactly what you want to install.
 *   **Idempotent**: Safe to run multiple times; detects installed apps and backups existing configs.
 *   **Smart Detection**: Identifies already installed packages and groups them separately.
+*   **Flexible Reinstall**: Keep installed packages checked to reinstall them, or uncheck to skip.
 *   **Parallel Installation**: Fast installation using concurrent workers.
 *   **Real-time Progress Tracking**: Visual progress bar with organized installation status:
     *   Completed packages displayed in green (sorted alphabetically)

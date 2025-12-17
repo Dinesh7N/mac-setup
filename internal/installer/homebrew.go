@@ -114,9 +114,35 @@ func InstallFormula(ctx context.Context, name string) error {
 	})
 }
 
+func ReinstallFormula(ctx context.Context, name string) error {
+	return utils.Retry(ctx, utils.RetryOptions{Attempts: 3, BaseDelay: 500 * time.Millisecond}, func(ctx context.Context) error {
+		res, err := utils.Run(ctx, 0, GetBrewExecutable(), "reinstall", name)
+		if err != nil {
+			if strings.TrimSpace(res.Stderr) != "" {
+				return fmt.Errorf("%w: %s", err, strings.TrimSpace(res.Stderr))
+			}
+			return err
+		}
+		return nil
+	})
+}
+
 func InstallCask(ctx context.Context, name string) error {
 	return utils.Retry(ctx, utils.RetryOptions{Attempts: 3, BaseDelay: 500 * time.Millisecond}, func(ctx context.Context) error {
 		res, err := utils.Run(ctx, 0, GetBrewExecutable(), "install", "--cask", name)
+		if err != nil {
+			if strings.TrimSpace(res.Stderr) != "" {
+				return fmt.Errorf("%w: %s", err, strings.TrimSpace(res.Stderr))
+			}
+			return err
+		}
+		return nil
+	})
+}
+
+func ReinstallCask(ctx context.Context, name string) error {
+	return utils.Retry(ctx, utils.RetryOptions{Attempts: 3, BaseDelay: 500 * time.Millisecond}, func(ctx context.Context) error {
+		res, err := utils.Run(ctx, 0, GetBrewExecutable(), "reinstall", "--cask", name)
 		if err != nil {
 			if strings.TrimSpace(res.Stderr) != "" {
 				return fmt.Errorf("%w: %s", err, strings.TrimSpace(res.Stderr))
