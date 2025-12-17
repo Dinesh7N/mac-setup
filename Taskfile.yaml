@@ -1,0 +1,42 @@
+version: '3'
+
+vars:
+  BINARY_NAME: macsetup
+
+tasks:
+  default:
+    cmds:
+      - task: build
+
+  build:
+    desc: Build the binary
+    vars:
+      VERSION:
+        sh: git describe --tags --always --dirty 2>/dev/null || echo dev
+      LDFLAGS: '-ldflags "-s -w -X main.version={{.VERSION}}"'
+    cmds:
+      - go build {{.LDFLAGS}} -o bin/{{.BINARY_NAME}} .
+    sources:
+      - ./**/*.go
+    generates:
+      - bin/{{.BINARY_NAME}}
+
+  run:
+    desc: Run the application
+    cmds:
+      - go run . -- {{.CLI_ARGS}}
+
+  clean:
+    desc: Clean build artifacts
+    cmds:
+      - rm -rf bin/ dist/
+
+  test:
+    desc: Run tests
+    cmds:
+      - go test ./...
+
+  lint:
+    desc: Run linter
+    cmds:
+      - golangci-lint run

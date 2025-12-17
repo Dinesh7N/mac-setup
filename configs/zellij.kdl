@@ -1,0 +1,16 @@
+keybinds clear-defaults=true {
+  normal {
+    bind "Ctrl a" { SwitchToMode "tmux"; }
+  }
+  tmux {
+    bind "Esc" { SwitchToMode "Normal"; }
+    bind "Ctrl a" { Write 1; SwitchToMode "Normal"; }
+    bind "|" { NewPane "Right"; SwitchToMode "Normal"; }
+    bind "-" { NewPane "Down"; SwitchToMode "Normal"; }
+    bind "h" { MoveFocus "Left"; SwitchToMode "Normal"; }
+    bind "j" { MoveFocus "Down"; SwitchToMode "Normal"; }
+    bind "k" { MoveFocus "Up"; SwitchToMode "Normal"; }
+    bind "l" { MoveFocus "Right"; SwitchToMode "Normal"; }
+  }
+}
+
