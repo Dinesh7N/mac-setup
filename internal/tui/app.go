@@ -64,14 +64,16 @@ type listItem struct {
 	pkg        *config.Package
 }
 
-type installDoneMsg installer.Summary
-type xcodeReadyMsg struct{}
-type scanFinishedMsg map[string]bool
-type installStartedMsg struct {
-	updates <-chan installer.ProgressUpdate
-	done    <-chan installer.Summary
-	errs    <-chan error
-}
+type (
+	installDoneMsg    installer.Summary
+	xcodeReadyMsg     struct{}
+	scanFinishedMsg   map[string]bool
+	installStartedMsg struct {
+		updates <-chan installer.ProgressUpdate
+		done    <-chan installer.Summary
+		errs    <-chan error
+	}
+)
 type errMsg struct{ err error }
 
 func Run(ctx context.Context, workers int, verbose bool) error {
@@ -87,29 +89,30 @@ func newModel(ctx context.Context, workers int, verbose bool) Model {
 
 	bar := progress.New(progress.WithDefaultGradient())
 
-		m := Model{
-			ctx:        ctx,
-			state:      StateWelcome,
-			workers:    workers,
-			verbose:    verbose,
-			categories: config.Categories(),
-			packages:   config.AllPackages(),
-			selected:   config.DefaultSelection(),
-			collapsed:  make(map[string]bool),
-			spin:       spin,
-			bar:        bar,
-		}
-		
-		// Collapse all categories by default
-		for _, cat := range m.categories {
-			m.collapsed[cat.Key] = true
-		}
-	
-		m.rebuildList()
-		return m}
+	m := Model{
+		ctx:        ctx,
+		state:      StateWelcome,
+		workers:    workers,
+		verbose:    verbose,
+		categories: config.Categories(),
+		packages:   config.AllPackages(),
+		selected:   config.DefaultSelection(),
+		collapsed:  make(map[string]bool),
+		spin:       spin,
+		bar:        bar,
+	}
+
+	// Collapse all categories by default
+	for _, cat := range m.categories {
+		m.collapsed[cat.Key] = true
+	}
+
+	m.rebuildList()
+	return m
+}
 
 func (m Model) Init() tea.Cmd {
-	return spinner.Tick
+	return m.spin.Tick
 }
 
 func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
@@ -126,7 +129,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.progressUpdates = msg.updates
 		m.installDoneCh = msg.done
 		m.installErrCh = msg.errs
-		return m, tea.Batch(m.waitForUpdate(), m.waitForDone(), spinner.Tick)
+		return m, tea.Batch(m.waitForUpdate(), m.waitForDone(), m.spin.Tick)
 	case installDoneMsg:
 		m.state = StateSummary
 		m.results = msg.Results
@@ -221,9 +224,9 @@ func (m Model) handleKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 }
 
 func (m *Model) updateScroll() {
-	viewHeight := m.height - 5 
+	viewHeight := m.height - 5
 	if viewHeight < 1 {
-		viewHeight = 5 
+		viewHeight = 5
 	}
 
 	if m.cursor < m.scrollOffset {
@@ -238,7 +241,7 @@ func (m *Model) toggleCurrent() {
 		return
 	}
 	item := m.listItems[m.cursor]
-	
+
 	if item.isCategory && item.category != nil {
 		catKey := item.category.Key
 		m.collapsed[catKey] = !m.collapsed[catKey]
@@ -269,7 +272,7 @@ func (m *Model) selectCategoryAtCursor(on bool) {
 	} else {
 		return
 	}
-	
+
 	for _, c := range m.categories {
 		if c.Key == catKey && (c.Required || !c.Selectable) {
 			return
@@ -285,7 +288,7 @@ func (m *Model) selectCategoryAtCursor(on bool) {
 		}
 		// If on=true (selecting all), we might select installed ones.
 		// If the user explicitly hits 'a', they probably want to select everything in that category
-		// regardless of installed status. 
+		// regardless of installed status.
 		// Or should we only select uninstalled ones?
 		// Standard behavior: 'a' selects all.
 		m.selected[pkg.Name] = on
@@ -295,7 +298,7 @@ func (m *Model) selectCategoryAtCursor(on bool) {
 func (m *Model) rebuildList() {
 	var items []listItem
 	pkgsByCat := map[string][]config.Package{}
-	
+
 	// Separate packages into categories dynamically
 	for _, p := range m.packages {
 		// If installed and NOT selected (meaning we are skipping it), it goes to "Already Installed"
@@ -304,27 +307,27 @@ func (m *Model) rebuildList() {
 		// User said "already installed packages should not be a part of individual categories below".
 		// Let's adhere to that for non-required ones.
 		// For required ones, they are always selected, so they stay in original category.
-		
+
 		effectiveCat := p.Category
 		isInstalled := m.installed[p.Name]
 		isSelected := m.selected[p.Name]
-		
+
 		if isInstalled && !isSelected {
 			effectiveCat = "installed"
 		}
-		
+
 		pkgsByCat[effectiveCat] = append(pkgsByCat[effectiveCat], p)
 	}
 
 	for _, cat := range m.categories {
 		// Skip empty categories to reduce clutter? Or show empty ones?
 		// Let's show them if they exist in config.
-		
+
 		// Skip core from list as per previous logic (it's hidden/auto-handled)
 		if cat.Key == "core" {
 			continue
 		}
-		
+
 		pkgs := pkgsByCat[cat.Key]
 		// If no packages in "installed" category, maybe hide it?
 		if cat.Key == "installed" && len(pkgs) == 0 {
@@ -333,7 +336,7 @@ func (m *Model) rebuildList() {
 
 		c := cat
 		items = append(items, listItem{isCategory: true, category: &c})
-		
+
 		if m.collapsed[cat.Key] {
 			continue
 		}
@@ -360,7 +363,7 @@ func (m Model) startScan() tea.Cmd {
 		if err != nil {
 			// If scanning fails (e.g. brew not installed), we assume nothing installed or handle gracefully
 			// For now, return empty map or partial results
-			// We can log error if we had a logger
+			installed = make(map[string]bool)
 		}
 		if installed == nil {
 			installed = make(map[string]bool)
@@ -494,13 +497,13 @@ func selectionView(m Model) string {
 		end = len(m.listItems)
 	}
 	if start > end {
-		start = end 
+		start = end
 	}
 
 	for i := start; i < end; i++ {
 		item := m.listItems[i]
 		isCursor := (i == m.cursor)
-		
+
 		cursor := "  "
 		if isCursor {
 			cursor = cursorStyle.Render("▸ ")
@@ -509,17 +512,17 @@ func selectionView(m Model) string {
 		if item.isCategory && item.category != nil {
 			cat := item.category
 			countSel := selectedCount(m.selected, m.packages, cat.Key)
-			
+
 			collapseIcon := "[-]"
 			if m.collapsed[cat.Key] {
 				collapseIcon = "[+]"
 			}
 
 			line := fmt.Sprintf("%s%s %s [%d selected]\n", cursor, collapseIcon, strings.ToUpper(cat.Name), countSel)
-			
+
 			// Style category header
 			line = strings.Replace(line, strings.ToUpper(cat.Name), categoryStyle.Render(strings.ToUpper(cat.Name)), 1)
-			
+
 			if cat.Required {
 				line = strings.TrimRight(line, "\n") + dimStyle.Render(" (required)") + "\n"
 			}
@@ -528,13 +531,13 @@ func selectionView(m Model) string {
 		}
 		if item.pkg != nil {
 			pkg := item.pkg
-			
+
 			ch := "[ ]"
-			
+
 			isInstalled := m.installed[pkg.Name]
 			isSelected := m.selected[pkg.Name]
 			isRequired := pkg.Required || pkg.Category == "fonts"
-		
+
 			if isRequired {
 				isSelected = true
 			}
@@ -546,11 +549,11 @@ func selectionView(m Model) string {
 				}
 			} else if isInstalled {
 				ch = "[✓]"
-				ch = okStyle.Render(ch) 
+				ch = okStyle.Render(ch)
 			}
-			
+
 			line := fmt.Sprintf("%s  %s %s", cursor, ch, pkg.Name)
-			
+
 			// Add status text
 			if isInstalled {
 				if isSelected && !isRequired {
@@ -563,7 +566,7 @@ func selectionView(m Model) string {
 			if pkg.Required {
 				line += dimStyle.Render(" (required)")
 			}
-			
+
 			b.WriteString(line + "\n")
 		}
 	}

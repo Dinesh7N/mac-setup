@@ -14,12 +14,16 @@ import (
 	"macsetup/internal/utils"
 )
 
-func IsBrewInstalled(ctx context.Context) bool {
-	_, err := exec.LookPath("brew")
-	if err == nil {
-		return true
+func GetBrewExecutable() string {
+	if path, err := exec.LookPath("brew"); err == nil {
+		return path
 	}
-	_, err = utils.Run(ctx, 5*time.Second, "/opt/homebrew/bin/brew", "--version")
+	return "/opt/homebrew/bin/brew"
+}
+
+func IsBrewInstalled(ctx context.Context) bool {
+	brewCmd := GetBrewExecutable()
+	_, err := utils.Run(ctx, 5*time.Second, brewCmd, "--version")
 	return err == nil
 }
 
@@ -33,7 +37,9 @@ func InstallBrew(ctx context.Context) error {
 	}); err != nil {
 		return err
 	}
-	defer os.Remove(script)
+	defer func() {
+		_ = os.Remove(script)
+	}()
 
 	cmd := exec.CommandContext(ctx, "/bin/bash", script)
 	cmd.Stdin = os.Stdin
@@ -51,14 +57,14 @@ func InstallBrew(ctx context.Context) error {
 
 func BrewUpdate(ctx context.Context) error {
 	return utils.Retry(ctx, utils.RetryOptions{Attempts: 3, BaseDelay: 300 * time.Millisecond}, func(ctx context.Context) error {
-		_, err := utils.Run(ctx, 0, "brew", "update")
+		_, err := utils.Run(ctx, 0, GetBrewExecutable(), "update")
 		return err
 	})
 }
 
 func BrewUpgrade(ctx context.Context) error {
 	return utils.Retry(ctx, utils.RetryOptions{Attempts: 3, BaseDelay: 300 * time.Millisecond}, func(ctx context.Context) error {
-		_, err := utils.Run(ctx, 0, "brew", "upgrade")
+		_, err := utils.Run(ctx, 0, GetBrewExecutable(), "upgrade")
 		return err
 	})
 }
@@ -68,7 +74,7 @@ func AddTap(ctx context.Context, tap string) error {
 		return nil
 	}
 	return utils.Retry(ctx, utils.RetryOptions{Attempts: 3, BaseDelay: 300 * time.Millisecond}, func(ctx context.Context) error {
-		res, err := utils.Run(ctx, 0, "brew", "tap", tap)
+		res, err := utils.Run(ctx, 0, GetBrewExecutable(), "tap", tap)
 		if err != nil {
 			if strings.TrimSpace(res.Stderr) != "" {
 				return fmt.Errorf("%w: %s", err, strings.TrimSpace(res.Stderr))
@@ -83,7 +89,7 @@ func IsTapInstalled(ctx context.Context, tap string) (bool, error) {
 	if tap == "" {
 		return true, nil
 	}
-	res, err := utils.Run(ctx, 0, "brew", "tap")
+	res, err := utils.Run(ctx, 0, GetBrewExecutable(), "tap")
 	if err != nil {
 		return false, err
 	}
@@ -97,7 +103,7 @@ func IsTapInstalled(ctx context.Context, tap string) (bool, error) {
 
 func InstallFormula(ctx context.Context, name string) error {
 	return utils.Retry(ctx, utils.RetryOptions{Attempts: 3, BaseDelay: 500 * time.Millisecond}, func(ctx context.Context) error {
-		res, err := utils.Run(ctx, 0, "brew", "install", name)
+		res, err := utils.Run(ctx, 0, GetBrewExecutable(), "install", name)
 		if err != nil {
 			if strings.TrimSpace(res.Stderr) != "" {
 				return fmt.Errorf("%w: %s", err, strings.TrimSpace(res.Stderr))
@@ -110,7 +116,7 @@ func InstallFormula(ctx context.Context, name string) error {
 
 func InstallCask(ctx context.Context, name string) error {
 	return utils.Retry(ctx, utils.RetryOptions{Attempts: 3, BaseDelay: 500 * time.Millisecond}, func(ctx context.Context) error {
-		res, err := utils.Run(ctx, 0, "brew", "install", "--cask", name)
+		res, err := utils.Run(ctx, 0, GetBrewExecutable(), "install", "--cask", name)
 		if err != nil {
 			if strings.TrimSpace(res.Stderr) != "" {
 				return fmt.Errorf("%w: %s", err, strings.TrimSpace(res.Stderr))
@@ -124,13 +130,13 @@ func InstallCask(ctx context.Context, name string) error {
 func IsBrewPackageInstalled(ctx context.Context, pkg config.Package) (bool, error) {
 	switch pkg.Type {
 	case config.TypeFormula:
-		_, err := utils.Run(ctx, 0, "brew", "list", "--formula", pkg.Name)
+		_, err := utils.Run(ctx, 0, GetBrewExecutable(), "list", "--formula", pkg.Name)
 		if err == nil {
 			return true, nil
 		}
 		return false, nil
 	case config.TypeCask:
-		_, err := utils.Run(ctx, 0, "brew", "list", "--cask", pkg.Name)
+		_, err := utils.Run(ctx, 0, GetBrewExecutable(), "list", "--cask", pkg.Name)
 		if err == nil {
 			return true, nil
 		}

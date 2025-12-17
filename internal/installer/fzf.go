@@ -16,10 +16,11 @@ func ConfigureFzf(ctx context.Context) (InstallStatus, error) {
 	if utils.Exists(filepath.Join(home, ".fzf.zsh")) {
 		return StatusSkipped, nil
 	}
-	if _, err := utils.Run(ctx, 0, "brew", "list", "--formula", "fzf"); err != nil {
+	brewCmd := GetBrewExecutable()
+	if _, err := utils.Run(ctx, 0, brewCmd, "list", "--formula", "fzf"); err != nil {
 		return StatusSkipped, nil
 	}
-	res, err := utils.Run(ctx, 0, "brew", "--prefix")
+	res, err := utils.Run(ctx, 0, brewCmd, "--prefix")
 	if err != nil {
 		return StatusFailed, err
 	}

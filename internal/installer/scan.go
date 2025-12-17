@@ -15,8 +15,9 @@ func ScanInstalledPackages(ctx context.Context, packages []config.Package) (map[
 
 	// 1. Scan Brew Formulas and Casks (Bulk)
 	if IsBrewInstalled(ctx) {
+		brewCmd := GetBrewExecutable()
 		// Get all formulas
-		if out, err := utils.Run(ctx, 10*time.Second, "brew", "list", "--formula", "-1"); err == nil {
+		if out, err := utils.Run(ctx, 10*time.Second, brewCmd, "list", "--formula", "-1"); err == nil {
 			for _, line := range strings.Split(out.Stdout, "\n") {
 				if name := strings.TrimSpace(line); name != "" {
 					installed["formula:"+name] = true
@@ -25,7 +26,7 @@ func ScanInstalledPackages(ctx context.Context, packages []config.Package) (map[
 		}
 
 		// Get all casks
-		if out, err := utils.Run(ctx, 10*time.Second, "brew", "list", "--cask", "-1"); err == nil {
+		if out, err := utils.Run(ctx, 10*time.Second, brewCmd, "list", "--cask", "-1"); err == nil {
 			for _, line := range strings.Split(out.Stdout, "\n") {
 				if name := strings.TrimSpace(line); name != "" {
 					installed["cask:"+name] = true
@@ -40,9 +41,10 @@ func ScanInstalledPackages(ctx context.Context, packages []config.Package) (map[
 
 		switch pkg.Type {
 		case config.TypeSystem:
-			if pkg.Name == "Xcode CLI Tools" {
+			switch pkg.Name {
+			case "Xcode CLI Tools":
 				isInstalled = IsXcodeInstalled(ctx)
-			} else if pkg.Name == "Homebrew" {
+			case "Homebrew":
 				isInstalled = IsBrewInstalled(ctx)
 			}
 		case config.TypeFormula:

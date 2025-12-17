@@ -317,10 +317,6 @@ func (m *Manager) postInstall(ctx context.Context) []InstallResult {
 }
 
 func (m *Manager) installFormulas(ctx context.Context, formulas []config.Package) []InstallResult {
-	type res struct {
-		r InstallResult
-	}
-
 	jobs := make(chan config.Package)
 	out := make(chan InstallResult, len(formulas))
 	var wg sync.WaitGroup
