@@ -42,7 +42,9 @@ func Execute(version, commit, date string) {
 				out = io.MultiWriter(os.Stdout, f)
 			}
 			if closeOut != nil {
-				defer closeOut()
+				defer func() {
+					_ = closeOut()
+				}()
 			}
 
 			if dryRun {

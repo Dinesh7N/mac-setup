@@ -42,7 +42,9 @@ func InstallOhMyZsh(ctx context.Context) error {
 	}
 	scriptPath := script.Name()
 	_ = script.Close()
-	defer os.Remove(scriptPath)
+	defer func() {
+		_ = os.Remove(scriptPath)
+	}()
 
 	if err := utils.Retry(ctx, utils.RetryOptions{Attempts: 3, BaseDelay: 500 * time.Millisecond}, func(ctx context.Context) error {
 		res, err := utils.Run(ctx, 0, "curl", "-fsSL", "-o", scriptPath, constants.OhMyZshInstallURL)

@@ -41,5 +41,16 @@ chmod +x "$BINARY"
 echo -e "${GREEN}✓${NC} Downloaded successfully"
 echo ""
 
-exec "$BINARY"
+LOG_FILE="/tmp/macsetup.log"
+echo "Starting setup... Logs will be available at $LOG_FILE"
+echo ""
+
+# Execute with logging
+if ! "$BINARY" | tee "$LOG_FILE"; then
+    echo ""
+    echo -e "${RED}Installation failed.${NC}"
+    echo "Please check the log file for details: $LOG_FILE"
+    echo "Report issues at: https://github.com/Dinesh7N/mac-setup/issues"
+    exit 1
+fi
 

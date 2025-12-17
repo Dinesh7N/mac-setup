@@ -73,11 +73,95 @@ task build
 
 ## Contributing
 
-Pull requests are welcome! Please ensure you run tests before submitting.
+Pull requests are welcome! Please ensure code is formatted and linted before submitting.
+
+### Prerequisites
+
+Install the required development tools:
 
 ```bash
-task test
+# Install golangci-lint for linting
+brew install golangci-lint
+
+# Install gofumpt for formatting
+brew install gofumpt
+
+# Install task runner (optional but recommended)
+brew install go-task
 ```
+
+### Development Workflow
+
+```bash
+# Format code with gofumpt
+task format
+
+# Run linter (will format first, then lint)
+task lint
+
+# Run both format and lint
+task check
+
+# Run tests
+task test
+
+# Build the binary
+task build
+```
+
+## Release Process (Maintainers)
+
+To create and publish a new release, use the automated release task:
+
+### Automated Release (Recommended)
+
+```bash
+# Using Task runner (recommended)
+task release VERSION=v0.0.2
+
+# Or directly using the script
+./scripts/release.sh v0.0.2
+```
+
+This will automatically:
+1. Validate the version format
+2. Check for uncommitted changes
+3. Build the binary with version info
+4. Create and push a git tag
+5. Upload the binary to GitHub releases
+
+**Requirements**:
+- GitHub CLI (`gh`) installed: `brew install gh`
+- Authenticated with GitHub: `gh auth login`
+
+### Manual Release (Alternative)
+
+If you prefer manual steps:
+
+```bash
+VERSION=v0.0.2
+
+# 1. Build the binary
+go build -ldflags "-s -w -X main.version=${VERSION}" -o bin/macsetup-darwin-arm64 .
+
+# 2. Create and push git tag
+git tag -a ${VERSION} -m "Release ${VERSION}"
+git push origin ${VERSION}
+
+# 3. Upload to GitHub releases
+gh release upload ${VERSION} bin/macsetup-darwin-arm64 --clobber
+```
+
+**Note**: The `install.sh` script automatically pulls the latest release asset named `macsetup-darwin-arm64`, so the binary name must match exactly.
+
+## Troubleshooting
+
+If the installation fails, the logs are automatically saved to:
+```bash
+/tmp/macsetup.log
+```
+
+Please attach this file when opening an issue.
 
 ## License
 
