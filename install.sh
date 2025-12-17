@@ -25,9 +25,9 @@ echo -e "${GREEN}✓${NC} macOS on Apple Silicon detected"
 REPO="Dinesh7N/mac-setup"
 
 echo "Fetching latest release..."
-LATEST=$(curl -sL "https://api.github.com/repos/${REPO}/releases/latest" | grep '"tag_name"' | cut -d'"' -f4)
+LATEST=$(curl -sL "https://api.github.com/repos/${REPO}/releases/latest" | grep '"tag_name"' | cut -d'"' -f4 || true)
 if [[ -z "${LATEST}" ]]; then
-  echo -e "${RED}Error: Could not fetch latest release${NC}"
+  echo -e "${RED}Error: Could not fetch latest release (Repository might be private or have no releases)${NC}"
   exit 1
 fi
 
