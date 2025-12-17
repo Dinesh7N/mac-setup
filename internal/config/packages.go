@@ -43,8 +43,8 @@ func AllPackages() []Package {
 		{Name: "tmux", Type: TypeFormula, Category: "shell_cli", Required: true, Default: true, Description: "Terminal multiplexer"},
 
 		// Terminals
-		{Name: "ghostty", Type: TypeCask, Category: "terminals", Default: true, Description: "Modern terminal emulator"},
-		{Name: "iterm2", Type: TypeCask, Category: "terminals", Default: false, Description: "Feature-rich terminal emulator"},
+		{Name: "iterm2", Type: TypeCask, Category: "terminals", Default: true, Description: "Feature-rich terminal emulator"},
+		{Name: "ghostty", Type: TypeCask, Category: "terminals", Default: false, Description: "Modern terminal emulator"},
 		{Name: "zellij", Type: TypeFormula, Category: "terminals", Default: false, Description: "Modern tmux alternative"},
 
 		// Editors

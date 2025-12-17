@@ -132,7 +132,11 @@ func (m *Manager) Run(ctx context.Context, selected map[string]bool) (Summary, e
 				return StatusFailed, "", err
 			}
 			if installed {
-				return StatusSkipped, "Already installed", nil
+				// Reinstall if already installed (user explicitly selected it)
+				if err := ReinstallCask(ctx, cask.Name); err != nil {
+					return StatusFailed, "", err
+				}
+				return StatusInstalled, "Reinstalled", nil
 			}
 			if err := InstallCask(ctx, cask.Name); err != nil {
 				return StatusFailed, "", err
@@ -342,8 +346,13 @@ func (m *Manager) installFormulas(ctx context.Context, formulas []config.Package
 					status = StatusFailed
 					errStr = err.Error()
 				} else if installed {
-					status = StatusSkipped
-					msg = "Already installed"
+					// Reinstall if already installed (user explicitly selected it)
+					if err := ReinstallFormula(ctx, pkg.Name); err != nil {
+						status = StatusFailed
+						errStr = classifyInstallError(pkg, err)
+					} else {
+						msg = "Reinstalled"
+					}
 				} else {
 					if err := InstallFormula(ctx, pkg.Name); err != nil {
 						status = StatusFailed
