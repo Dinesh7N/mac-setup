@@ -54,8 +54,15 @@ type Model struct {
 	progressUpdates <-chan installer.ProgressUpdate
 	installDoneCh   <-chan installer.Summary
 	installErrCh    <-chan error
-	logLines        []string
 	results         []installer.InstallResult
+
+	totalPackages     int
+	completedPackages int
+
+	// Track packages by state
+	installedPackages map[string]string // name -> message
+	failedPackages    map[string]string // name -> error
+	runningPackages   map[string]string // name -> message
 }
 
 type listItem struct {
@@ -90,16 +97,19 @@ func newModel(ctx context.Context, workers int, verbose bool) Model {
 	bar := progress.New(progress.WithDefaultGradient())
 
 	m := Model{
-		ctx:        ctx,
-		state:      StateWelcome,
-		workers:    workers,
-		verbose:    verbose,
-		categories: config.Categories(),
-		packages:   config.AllPackages(),
-		selected:   config.DefaultSelection(),
-		collapsed:  make(map[string]bool),
-		spin:       spin,
-		bar:        bar,
+		ctx:               ctx,
+		state:             StateWelcome,
+		workers:           workers,
+		verbose:           verbose,
+		categories:        config.Categories(),
+		packages:          config.AllPackages(),
+		selected:          config.DefaultSelection(),
+		collapsed:         make(map[string]bool),
+		spin:              spin,
+		bar:               bar,
+		installedPackages: make(map[string]string),
+		failedPackages:    make(map[string]string),
+		runningPackages:   make(map[string]string),
 	}
 
 	// Collapse all categories by default
@@ -129,6 +139,14 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.progressUpdates = msg.updates
 		m.installDoneCh = msg.done
 		m.installErrCh = msg.errs
+		// Count total packages to install
+		m.totalPackages = 0
+		for _, selected := range m.selected {
+			if selected {
+				m.totalPackages++
+			}
+		}
+		m.completedPackages = 0
 		return m, tea.Batch(m.waitForUpdate(), m.waitForDone(), m.spin.Tick)
 	case installDoneMsg:
 		m.state = StateSummary
@@ -398,29 +416,27 @@ func (m Model) waitForXcode() tea.Cmd {
 }
 
 func (m Model) applyUpdate(upd installer.ProgressUpdate) Model {
-	var icon string
+	pkgName := upd.Package.Name
+
 	switch upd.Status {
 	case installer.StatusRunning:
-		icon = "⠋"
-	case installer.StatusInstalled:
-		icon = okStyle.Render("+")
-	case installer.StatusSkipped:
-		icon = dimStyle.Render("✓")
+		// Remove from other states if present
+		delete(m.installedPackages, pkgName)
+		delete(m.failedPackages, pkgName)
+		// Add to running
+		m.runningPackages[pkgName] = upd.Message
+	case installer.StatusInstalled, installer.StatusSkipped:
+		// Remove from running
+		delete(m.runningPackages, pkgName)
+		// Add to installed
+		m.installedPackages[pkgName] = upd.Message
+		m.completedPackages++
 	case installer.StatusFailed:
-		icon = badStyle.Render("!")
-	default:
-		icon = "○"
-	}
-	line := fmt.Sprintf("%s %s", icon, upd.Package.Name)
-	if upd.Message != "" {
-		line += dimStyle.Render(" (" + upd.Message + ")")
-	}
-	if upd.Error != "" {
-		line += badStyle.Render(" (" + upd.Error + ")")
-	}
-	m.logLines = append(m.logLines, line)
-	if len(m.logLines) > 18 {
-		m.logLines = m.logLines[len(m.logLines)-18:]
+		// Remove from running
+		delete(m.runningPackages, pkgName)
+		// Add to failed
+		m.failedPackages[pkgName] = upd.Error
+		m.completedPackages++
 	}
 	return m
 }
@@ -604,15 +620,61 @@ func installingView(m Model) string {
 	var b strings.Builder
 	b.WriteString(titleStyle.Render("Installing..."))
 	b.WriteString("\n\n")
-	b.WriteString(m.spin.View())
-	b.WriteString(" Running installation plan\n\n")
-	for _, line := range m.logLines {
-		b.WriteString(line)
+
+	// Section 1: Installed packages (green, sorted alphabetically)
+	if len(m.installedPackages) > 0 {
+		var names []string
+		for name := range m.installedPackages {
+			names = append(names, name)
+		}
+		sort.Strings(names)
+
+		for _, name := range names {
+			msg := m.installedPackages[name]
+			line := okStyle.Render("✓ " + name)
+			if msg != "" {
+				line += dimStyle.Render(" (" + msg + ")")
+			}
+			b.WriteString(line)
+			b.WriteString("\n")
+		}
 		b.WriteString("\n")
 	}
-	if len(m.logLines) > 0 {
+
+	// Section 2: Failed packages (red)
+	if len(m.failedPackages) > 0 {
+		for name, errMsg := range m.failedPackages {
+			line := badStyle.Render("✗ " + name)
+			if errMsg != "" {
+				line += badStyle.Render(" (" + errMsg + ")")
+			}
+			b.WriteString(line)
+			b.WriteString("\n")
+		}
 		b.WriteString("\n")
 	}
+
+	// Section 3: Currently running packages
+	if len(m.runningPackages) > 0 {
+		for name, msg := range m.runningPackages {
+			line := m.spin.View() + " " + name
+			if msg != "" {
+				line += dimStyle.Render(" (" + msg + ")")
+			}
+			b.WriteString(line)
+			b.WriteString("\n")
+		}
+		b.WriteString("\n")
+	}
+
+	// Progress bar at the bottom
+	var percent float64
+	if m.totalPackages > 0 {
+		percent = float64(m.completedPackages) / float64(m.totalPackages)
+	}
+	b.WriteString(m.bar.ViewAs(percent))
+	b.WriteString(fmt.Sprintf("  %d/%d packages\n\n", m.completedPackages, m.totalPackages))
+
 	b.WriteString(dimStyle.Render("This may take a while. Press q to quit.\n"))
 	return b.String()
 }

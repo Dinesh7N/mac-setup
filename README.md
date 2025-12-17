@@ -13,6 +13,11 @@ A TUI-based onboarding tool for setting up fresh MacBooks. It installs Homebrew,
 *   **Idempotent**: Safe to run multiple times; detects installed apps and backups existing configs.
 *   **Smart Detection**: Identifies already installed packages and groups them separately.
 *   **Parallel Installation**: Fast installation using concurrent workers.
+*   **Real-time Progress Tracking**: Visual progress bar with organized installation status:
+    *   Completed packages displayed in green (sorted alphabetically)
+    *   Failed packages highlighted in red with error details
+    *   Currently installing packages shown with spinner
+    *   Overall progress bar showing completion percentage
 *   **Dotfile Management**: Automatically configures Zsh, Starship, Neovim (Kickstart), and Tmux/Zellij.
 
 ## Quick Start (One-Liner)
