@@ -7,12 +7,16 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
+	"sync"
 	"time"
 
 	"macsetup/internal/config"
 	"macsetup/internal/constants"
 	"macsetup/internal/utils"
 )
+
+// brewMutex ensures only one brew command runs at a time to avoid Homebrew's file locking issues
+var brewMutex sync.Mutex
 
 func GetBrewExecutable() string {
 	if path, err := exec.LookPath("brew"); err == nil {
@@ -56,6 +60,8 @@ func InstallBrew(ctx context.Context) error {
 }
 
 func BrewUpdate(ctx context.Context) error {
+	brewMutex.Lock()
+	defer brewMutex.Unlock()
 	return utils.Retry(ctx, utils.RetryOptions{Attempts: 3, BaseDelay: 300 * time.Millisecond}, func(ctx context.Context) error {
 		_, err := utils.Run(ctx, 0, GetBrewExecutable(), "update")
 		return err
@@ -63,6 +69,8 @@ func BrewUpdate(ctx context.Context) error {
 }
 
 func BrewUpgrade(ctx context.Context) error {
+	brewMutex.Lock()
+	defer brewMutex.Unlock()
 	return utils.Retry(ctx, utils.RetryOptions{Attempts: 3, BaseDelay: 300 * time.Millisecond}, func(ctx context.Context) error {
 		_, err := utils.Run(ctx, 0, GetBrewExecutable(), "upgrade")
 		return err
@@ -73,6 +81,8 @@ func AddTap(ctx context.Context, tap string) error {
 	if tap == "" {
 		return nil
 	}
+	brewMutex.Lock()
+	defer brewMutex.Unlock()
 	return utils.Retry(ctx, utils.RetryOptions{Attempts: 3, BaseDelay: 300 * time.Millisecond}, func(ctx context.Context) error {
 		res, err := utils.Run(ctx, 0, GetBrewExecutable(), "tap", tap)
 		if err != nil {
@@ -102,6 +112,8 @@ func IsTapInstalled(ctx context.Context, tap string) (bool, error) {
 }
 
 func InstallFormula(ctx context.Context, name string) error {
+	brewMutex.Lock()
+	defer brewMutex.Unlock()
 	return utils.Retry(ctx, utils.RetryOptions{Attempts: 3, BaseDelay: 500 * time.Millisecond}, func(ctx context.Context) error {
 		res, err := utils.Run(ctx, 0, GetBrewExecutable(), "install", name)
 		if err != nil {
@@ -115,6 +127,8 @@ func InstallFormula(ctx context.Context, name string) error {
 }
 
 func ReinstallFormula(ctx context.Context, name string) error {
+	brewMutex.Lock()
+	defer brewMutex.Unlock()
 	return utils.Retry(ctx, utils.RetryOptions{Attempts: 3, BaseDelay: 500 * time.Millisecond}, func(ctx context.Context) error {
 		res, err := utils.Run(ctx, 0, GetBrewExecutable(), "reinstall", name)
 		if err != nil {
@@ -128,6 +142,8 @@ func ReinstallFormula(ctx context.Context, name string) error {
 }
 
 func InstallCask(ctx context.Context, name string) error {
+	brewMutex.Lock()
+	defer brewMutex.Unlock()
 	return utils.Retry(ctx, utils.RetryOptions{Attempts: 3, BaseDelay: 500 * time.Millisecond}, func(ctx context.Context) error {
 		res, err := utils.Run(ctx, 0, GetBrewExecutable(), "install", "--cask", name)
 		if err != nil {
@@ -141,6 +157,8 @@ func InstallCask(ctx context.Context, name string) error {
 }
 
 func ReinstallCask(ctx context.Context, name string) error {
+	brewMutex.Lock()
+	defer brewMutex.Unlock()
 	return utils.Retry(ctx, utils.RetryOptions{Attempts: 3, BaseDelay: 500 * time.Millisecond}, func(ctx context.Context) error {
 		res, err := utils.Run(ctx, 0, GetBrewExecutable(), "reinstall", "--cask", name)
 		if err != nil {
