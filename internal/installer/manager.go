@@ -127,6 +127,7 @@ func (m *Manager) Run(ctx context.Context, selected map[string]bool) (Summary, e
 	for _, cask := range casks {
 		m.emit(cask, StatusRunning, "", "")
 		status, msg, errStr, dur := timed(ctx, func(ctx context.Context) (InstallStatus, string, error) {
+			// First check if installed via Homebrew
 			installed, err := IsBrewPackageInstalled(ctx, cask)
 			if err != nil {
 				return StatusFailed, "", err
@@ -134,6 +135,13 @@ func (m *Manager) Run(ctx context.Context, selected map[string]bool) (Summary, e
 			if installed {
 				return StatusSkipped, "Already installed", nil
 			}
+
+			// Check if app exists manually in /Applications
+			appExists, appPath := IsCaskAppInstalled(cask.Name)
+			if appExists {
+				return StatusSkipped, fmt.Sprintf("Already installed at %s", appPath), nil
+			}
+
 			if err := InstallCask(ctx, cask.Name); err != nil {
 				return StatusFailed, "", err
 			}
@@ -342,8 +350,20 @@ func (m *Manager) installFormulas(ctx context.Context, formulas []config.Package
 					status = StatusFailed
 					errStr = err.Error()
 				} else if installed {
-					status = StatusSkipped
-					msg = "Already installed"
+					// Package is installed, but check if it's linked
+					if !IsFormulaLinked(ctx, pkg.Name) {
+						// Try to link it
+						if err := LinkFormula(ctx, pkg.Name); err != nil {
+							status = StatusFailed
+							errStr = fmt.Sprintf("installed but not linked: %v", err)
+						} else {
+							status = StatusSkipped
+							msg = "Already installed (relinked)"
+						}
+					} else {
+						status = StatusSkipped
+						msg = "Already installed"
+					}
 				} else {
 					if err := InstallFormula(ctx, pkg.Name); err != nil {
 						status = StatusFailed

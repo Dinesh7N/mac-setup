@@ -126,6 +126,23 @@ func InstallFormula(ctx context.Context, name string) error {
 	})
 }
 
+func LinkFormula(ctx context.Context, name string) error {
+	brewMutex.Lock()
+	defer brewMutex.Unlock()
+	res, err := utils.Run(ctx, 10*time.Second, GetBrewExecutable(), "link", "--overwrite", name)
+	if err != nil {
+		// Check if it's already linked
+		if strings.Contains(res.Stderr, "already linked") || strings.Contains(res.Stdout, "already linked") {
+			return nil
+		}
+		if strings.TrimSpace(res.Stderr) != "" {
+			return fmt.Errorf("%w: %s", err, strings.TrimSpace(res.Stderr))
+		}
+		return err
+	}
+	return nil
+}
+
 func ReinstallFormula(ctx context.Context, name string) error {
 	brewMutex.Lock()
 	defer brewMutex.Unlock()
@@ -175,17 +192,57 @@ func IsBrewPackageInstalled(ctx context.Context, pkg config.Package) (bool, erro
 	switch pkg.Type {
 	case config.TypeFormula:
 		_, err := utils.Run(ctx, 0, GetBrewExecutable(), "list", "--formula", pkg.Name)
-		if err == nil {
-			return true, nil
-		}
-		return false, nil
+		return err == nil, nil
 	case config.TypeCask:
 		_, err := utils.Run(ctx, 0, GetBrewExecutable(), "list", "--cask", pkg.Name)
-		if err == nil {
-			return true, nil
-		}
-		return false, nil
+		return err == nil, nil
 	default:
 		return false, nil
 	}
+}
+
+// IsCaskAppInstalled checks if a cask's app exists in /Applications
+// This detects manually-installed apps that aren't managed by Homebrew
+func IsCaskAppInstalled(caskName string) (bool, string) {
+	// Map common cask names to their .app names
+	caskToApp := map[string]string{
+		"iterm2":    "iTerm.app",
+		"raycast":   "Raycast.app",
+		"rectangle": "Rectangle.app",
+		"alacritty": "Alacritty.app",
+		"ghostty":   "Ghostty.app",
+		"docker":    "Docker.app",
+		"slack":     "Slack.app",
+		"zoom":      "zoom.us.app",
+		"postman":   "Postman.app",
+	}
+
+	// Try to get app name from map, or use capitalized cask name + .app
+	appName, ok := caskToApp[caskName]
+	if !ok {
+		// Default: capitalize first letter and add .app
+		if len(caskName) > 0 {
+			appName = strings.ToUpper(caskName[0:1]) + caskName[1:] + ".app"
+		}
+	}
+
+	appPath := filepath.Join("/Applications", appName)
+	if _, err := os.Stat(appPath); err == nil {
+		return true, appPath
+	}
+
+	return false, ""
+}
+
+// IsFormulaLinked checks if a formula is properly linked in /opt/homebrew/bin
+func IsFormulaLinked(ctx context.Context, name string) bool {
+	// Use brew info to check if the package has a linked_keg
+	res, err := utils.Run(ctx, 5*time.Second, GetBrewExecutable(), "info", "--json=v2", name)
+	if err != nil {
+		return false
+	}
+
+	// Check if linked_keg is not null in the JSON output
+	// linked_keg will be the version string if linked, or null if not
+	return strings.Contains(res.Stdout, `"linked_keg":`) && !strings.Contains(res.Stdout, `"linked_keg": null`)
 }

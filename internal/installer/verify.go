@@ -16,20 +16,31 @@ type VerifyResult struct {
 
 func VerifyCriticalTools(ctx context.Context) []VerifyResult {
 	checks := []struct {
-		name string
-		cmd  []string
+		name        string
+		cmd         []string
+		brewFormula string // If set, try to link via brew if not found
 	}{
 		{name: "brew", cmd: []string{"brew", "--version"}},
 		{name: "git", cmd: []string{"git", "--version"}},
-		{name: "nvim", cmd: []string{"nvim", "--version"}},
-		{name: "tmux", cmd: []string{"tmux", "-V"}},
-		{name: "mise", cmd: []string{"mise", "--version"}},
-		{name: "starship", cmd: []string{"starship", "--version"}},
+		{name: "nvim", cmd: []string{"nvim", "--version"}, brewFormula: "neovim"},
+		{name: "tmux", cmd: []string{"tmux", "-V"}, brewFormula: "tmux"},
+		{name: "mise", cmd: []string{"mise", "--version"}, brewFormula: "mise"},
+		{name: "starship", cmd: []string{"starship", "--version"}, brewFormula: "starship"},
 	}
 
 	var results []VerifyResult
 	for _, c := range checks {
 		if _, err := exec.LookPath(c.cmd[0]); err != nil {
+			// Not in PATH - try to fix by linking if it's a brew formula
+			if c.brewFormula != "" {
+				if linkErr := LinkFormula(ctx, c.brewFormula); linkErr == nil {
+					// Successfully linked, verify again
+					if _, verifyErr := exec.LookPath(c.cmd[0]); verifyErr == nil {
+						results = append(results, VerifyResult{Name: c.name})
+						continue
+					}
+				}
+			}
 			results = append(results, VerifyResult{Name: c.name, Error: "not found in PATH"})
 			continue
 		}
