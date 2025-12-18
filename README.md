@@ -21,6 +21,17 @@ A TUI-based onboarding tool for setting up fresh MacBooks. It installs Homebrew,
     *   Overall progress bar showing completion percentage
 *   **Dotfile Management**: Automatically configures Zsh, Starship, Neovim (Kickstart), and Tmux/Zellij.
 
+## Screenshots
+
+### Interactive Selection
+![Selection View](screenshots/mac-setup-install-selection-view.png)
+
+### Real-time Installation Progress
+![Installation Progress](screenshots/mac-setup-installation-progress.png)
+
+### Installation Summary
+![Summary](screenshots/mac-setup-summary.png)
+
 ## Quick Start (One-Liner)
 
 To set up a fresh Mac, simply run this command in your terminal:
