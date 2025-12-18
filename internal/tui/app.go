@@ -66,9 +66,11 @@ type Model struct {
 }
 
 type listItem struct {
-	isCategory bool
-	category   *config.Category
-	pkg        *config.Package
+	isCategory      bool
+	isSubCategory   bool
+	subCategoryName string
+	category        *config.Category
+	pkg             *config.Package
 }
 
 type (
@@ -94,7 +96,7 @@ func newModel(ctx context.Context, workers int, verbose bool) Model {
 	spin := spinner.New()
 	spin.Spinner = spinner.Dot
 
-	bar := progress.New(progress.WithDefaultGradient())
+	bar := progress.New(progress.WithSolidFill("#8cc265"))
 
 	m := Model{
 		ctx:               ctx,
@@ -359,11 +361,28 @@ func (m *Model) rebuildList() {
 			continue
 		}
 
-		sort.Slice(pkgs, func(i, j int) bool { return strings.Compare(pkgs[i].Name, pkgs[j].Name) < 0 })
+		// Group by SubCategory
+		subCats := map[string][]config.Package{}
+		var subCatKeys []string
+		for _, p := range pkgs {
+			if _, exists := subCats[p.SubCategory]; !exists {
+				subCatKeys = append(subCatKeys, p.SubCategory)
+			}
+			subCats[p.SubCategory] = append(subCats[p.SubCategory], p)
+		}
+		sort.Strings(subCatKeys)
 
-		for i := range pkgs {
-			p := pkgs[i]
-			items = append(items, listItem{isCategory: false, pkg: &p})
+		for _, sc := range subCatKeys {
+			if sc != "" {
+				items = append(items, listItem{isSubCategory: true, subCategoryName: sc})
+			}
+			pList := subCats[sc]
+			sort.Slice(pList, func(i, j int) bool { return strings.Compare(pList[i].Name, pList[j].Name) < 0 })
+
+			for i := range pList {
+				p := pList[i]
+				items = append(items, listItem{isCategory: false, pkg: &p})
+			}
 		}
 	}
 	m.listItems = items
@@ -545,6 +564,13 @@ func selectionView(m Model) string {
 			b.WriteString(line)
 			continue
 		}
+
+		if item.isSubCategory {
+			line := fmt.Sprintf("%s   %s\n", cursor, dimStyle.Render(strings.ToUpper(item.subCategoryName)))
+			b.WriteString(line)
+			continue
+		}
+
 		if item.pkg != nil {
 			pkg := item.pkg
 
@@ -568,7 +594,12 @@ func selectionView(m Model) string {
 				ch = okStyle.Render(ch)
 			}
 
-			line := fmt.Sprintf("%s  %s %s", cursor, ch, pkg.Name)
+			indent := "  "
+			if pkg.SubCategory != "" {
+				indent = "    "
+			}
+
+			line := fmt.Sprintf("%s%s%s %s", cursor, indent, ch, pkg.Name)
 
 			// Add status text
 			if isInstalled {
