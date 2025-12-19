@@ -20,7 +20,7 @@ var defaultRuntimes = []MiseRuntime{
 
 func SetupMise(ctx context.Context) error {
 	for _, rt := range defaultRuntimes {
-		_, err := utils.Run(ctx, 0, "mise", "use", "--global", fmt.Sprintf("%s@%s", rt.Name, rt.Version))
+		_, err := utils.Run(ctx, false, 0, "mise", "use", "--global", fmt.Sprintf("%s@%s", rt.Name, rt.Version))
 		if err != nil {
 			return fmt.Errorf("failed to install %s: %w", rt.Name, err)
 		}

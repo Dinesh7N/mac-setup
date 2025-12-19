@@ -43,8 +43,8 @@ func CloneTPM(ctx context.Context) (InstallStatus, error) {
 }
 
 func GitClone(ctx context.Context, url, dest string) error {
-	return utils.Retry(ctx, utils.RetryOptions{Attempts: 3, BaseDelay: 500 * time.Millisecond}, func(ctx context.Context) error {
-		res, err := utils.Run(ctx, 0, "git", "clone", url, dest)
+	return utils.Retry(ctx, false, utils.RetryOptions{Attempts: 3, BaseDelay: 500 * time.Millisecond}, func(ctx context.Context) error {
+		res, err := utils.Run(ctx, false, 0, "git", "clone", url, dest)
 		if err != nil {
 			if strings.TrimSpace(res.Stderr) != "" {
 				return fmt.Errorf("%w: %s", err, strings.TrimSpace(res.Stderr))

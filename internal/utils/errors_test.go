@@ -25,7 +25,7 @@ func TestClassifyError(t *testing.T) {
 			name:      "permission",
 			stderr:    "Permission denied",
 			wantType:  ErrPermission,
-			wantMsg:   "Permission denied - try running with sudo",
+			wantMsg:   "Permission denied - check macOS Seatbelt or try running with sudo",
 			wantInErr: "[permission]",
 		},
 		{

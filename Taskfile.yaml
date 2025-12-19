@@ -26,6 +26,11 @@ tasks:
     cmds:
       - go run . -- {{.CLI_ARGS}}
 
+  gen-packages:
+    desc: Generate docs/packages.md from internal/config/packages.go
+    cmds:
+      - go run ./scripts/gen-packages-md.go > docs/packages.md
+
   clean:
     desc: Clean build artifacts
     cmds:
