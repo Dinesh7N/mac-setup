@@ -8,12 +8,12 @@ import (
 )
 
 func IsXcodeInstalled(ctx context.Context) bool {
-	_, err := utils.Run(ctx, 10*time.Second, "xcode-select", "-p")
+	_, err := utils.Run(ctx, false, 10*time.Second, "xcode-select", "-p")
 	return err == nil
 }
 
 func TriggerXcodeInstall(ctx context.Context) error {
-	_, _ = utils.Run(ctx, 0, "xcode-select", "--install")
+	_, _ = utils.Run(ctx, false, 0, "xcode-select", "--install")
 	return nil
 }
 

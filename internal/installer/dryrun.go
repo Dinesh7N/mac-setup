@@ -16,7 +16,7 @@ func DryRunPlan(ctx context.Context, selected map[string]bool) []string {
 		lines = append(lines, "Xcode CLI Tools: would install (GUI prompt)")
 	}
 
-	brewInstalled := IsBrewInstalled(ctx)
+	brewInstalled := IsBrewInstalled(ctx, false)
 	if brewInstalled {
 		lines = append(lines, "Homebrew: already installed (skip install, would run brew update/upgrade)")
 	} else {
@@ -63,7 +63,7 @@ func formatDryRunTap(ctx context.Context, brewInstalled bool, tap string) string
 	if !brewInstalled {
 		return fmt.Sprintf("%s: would tap (brew not installed yet)", tap)
 	}
-	ok, err := IsTapInstalled(ctx, tap)
+	ok, err := IsTapInstalled(ctx, false, tap)
 	if err != nil {
 		return fmt.Sprintf("%s: would tap (status unknown: %s)", tap, err.Error())
 	}
@@ -77,7 +77,7 @@ func formatDryRunBrewPkg(ctx context.Context, brewInstalled bool, pkg config.Pac
 	if !brewInstalled {
 		return fmt.Sprintf("%s (%s): would install (brew not installed yet)", pkg.Name, pkg.Type)
 	}
-	ok, err := IsBrewPackageInstalled(ctx, pkg)
+	ok, err := IsBrewPackageInstalled(ctx, false, pkg)
 	if err != nil {
 		return fmt.Sprintf("%s (%s): would install (status unknown: %s)", pkg.Name, pkg.Type, err.Error())
 	}

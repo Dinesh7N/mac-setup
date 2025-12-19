@@ -9,7 +9,7 @@ import (
 
 func TestRetrySucceedsAfterFailures(t *testing.T) {
 	var calls int
-	err := Retry(context.Background(), RetryOptions{Attempts: 3, BaseDelay: 1 * time.Millisecond, MaxDelay: 2 * time.Millisecond}, func(ctx context.Context) error {
+	err := Retry(context.Background(), false, RetryOptions{Attempts: 3, BaseDelay: 1 * time.Millisecond, MaxDelay: 2 * time.Millisecond}, func(ctx context.Context) error {
 		calls++
 		if calls < 2 {
 			return errors.New("temporary")
@@ -27,7 +27,7 @@ func TestRetrySucceedsAfterFailures(t *testing.T) {
 func TestRetryReturnsLastError(t *testing.T) {
 	var calls int
 	want := errors.New("nope")
-	err := Retry(context.Background(), RetryOptions{Attempts: 3, BaseDelay: 1 * time.Millisecond, MaxDelay: 2 * time.Millisecond}, func(ctx context.Context) error {
+	err := Retry(context.Background(), false, RetryOptions{Attempts: 3, BaseDelay: 1 * time.Millisecond, MaxDelay: 2 * time.Millisecond}, func(ctx context.Context) error {
 		calls++
 		return want
 	})
@@ -45,7 +45,7 @@ func TestRetryReturnsLastError(t *testing.T) {
 func TestRetryHonorsContextCancel(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	cancel()
-	err := Retry(ctx, RetryOptions{Attempts: 3, BaseDelay: 1 * time.Millisecond, MaxDelay: 2 * time.Millisecond}, func(ctx context.Context) error {
+	err := Retry(ctx, false, RetryOptions{Attempts: 3, BaseDelay: 1 * time.Millisecond, MaxDelay: 2 * time.Millisecond}, func(ctx context.Context) error {
 		return errors.New("temporary")
 	})
 	if err == nil {

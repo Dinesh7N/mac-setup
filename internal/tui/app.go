@@ -741,6 +741,45 @@ func summaryView(m Model) string {
 		failed,
 		elapsed,
 	))
+
+	var installedBrew []config.Package
+	var installedTasks []config.Package
+	for _, r := range m.results {
+		if r.Status != installer.StatusInstalled {
+			continue
+		}
+		switch r.Package.Type {
+		case config.TypeFormula, config.TypeCask:
+			installedBrew = append(installedBrew, r.Package)
+		default:
+			installedTasks = append(installedTasks, r.Package)
+		}
+	}
+	sort.Slice(installedBrew, func(i, j int) bool { return strings.Compare(installedBrew[i].Name, installedBrew[j].Name) < 0 })
+	sort.Slice(installedTasks, func(i, j int) bool { return strings.Compare(installedTasks[i].Name, installedTasks[j].Name) < 0 })
+
+	if len(installedBrew) > 0 {
+		b.WriteString(okStyle.Render("Installed packages (this session):\n"))
+		for _, pkg := range installedBrew {
+			link := brewPackageLink(pkg)
+			if link != "" {
+				b.WriteString(fmt.Sprintf("- %s — %s\n", pkg.Name, link))
+			} else {
+				b.WriteString(fmt.Sprintf("- %s\n", pkg.Name))
+			}
+		}
+		b.WriteString("\n")
+		b.WriteString(dimStyle.Render("Full reference list: docs/packages.md\n\n"))
+	}
+
+	if len(installedTasks) > 0 {
+		b.WriteString(dimStyle.Render("Setup tasks completed (this session):\n"))
+		for _, pkg := range installedTasks {
+			b.WriteString(fmt.Sprintf("- %s\n", pkg.Name))
+		}
+		b.WriteString("\n")
+	}
+
 	if failed > 0 {
 		b.WriteString(badStyle.Render("Failures:\n"))
 		for _, r := range m.results {
@@ -753,6 +792,17 @@ func summaryView(m Model) string {
 	}
 	b.WriteString("Press Enter to exit.\n")
 	return b.String()
+}
+
+func brewPackageLink(pkg config.Package) string {
+	switch pkg.Type {
+	case config.TypeFormula:
+		return "https://formulae.brew.sh/formula/" + pkg.Name
+	case config.TypeCask:
+		return "https://formulae.brew.sh/cask/" + pkg.Name
+	default:
+		return ""
+	}
 }
 
 func min(a, b int) int {

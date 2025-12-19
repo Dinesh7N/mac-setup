@@ -54,6 +54,14 @@ This script will:
 *   **Dev Tools**: Docker (OrbStack), Postgres, Redis, Python/Go/Node.js tooling.
 *   **Apps**: Browsers, Productivity tools, Fonts.
 
+## Package Links
+
+See `docs/packages.md` for a browsable list of packages (with links). To regenerate it after changing `internal/config/packages.go`, run:
+
+```bash
+task gen-packages
+```
+
 ## Manual Usage
 
 ### Build from Source

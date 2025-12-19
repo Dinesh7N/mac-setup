@@ -17,10 +17,10 @@ func ConfigureFzf(ctx context.Context) (InstallStatus, error) {
 		return StatusSkipped, nil
 	}
 	brewCmd := GetBrewExecutable()
-	if _, err := utils.Run(ctx, 0, brewCmd, "list", "--formula", "fzf"); err != nil {
+	if _, err := utils.Run(ctx, false, 0, brewCmd, "list", "--formula", "fzf"); err != nil {
 		return StatusSkipped, nil
 	}
-	res, err := utils.Run(ctx, 0, brewCmd, "--prefix")
+	res, err := utils.Run(ctx, false, 0, brewCmd, "--prefix")
 	if err != nil {
 		return StatusFailed, err
 	}
@@ -29,7 +29,7 @@ func ConfigureFzf(ctx context.Context) (InstallStatus, error) {
 		prefix = prefix[:len(prefix)-1]
 	}
 	installScript := filepath.Join(prefix, "opt", "fzf", "install")
-	_, err = utils.Run(ctx, 0, installScript, "--all", "--no-bash", "--no-fish")
+	_, err = utils.Run(ctx, false, 0, installScript, "--all", "--no-bash", "--no-fish")
 	if err != nil {
 		return StatusFailed, err
 	}

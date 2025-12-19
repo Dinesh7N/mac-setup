@@ -16,7 +16,7 @@ func TestLinkFormula(t *testing.T) {
 
 	// Test linking a formula that exists
 	// Note: This test assumes 'tree' is installed but might need linking
-	err := LinkFormula(ctx, "tree")
+	err := LinkFormula(ctx, false, "tree")
 	if err != nil {
 		// It's okay if it's already linked
 		if err.Error() != "already linked" {
@@ -34,13 +34,13 @@ func TestIsFormulaLinked(t *testing.T) {
 	defer cancel()
 
 	// Test with a common formula that should be linked (use tree instead of git)
-	linked := IsFormulaLinked(ctx, "tree")
+	linked := IsFormulaLinked(ctx, false, "tree")
 	if !linked {
 		t.Error("Expected tree to be linked, but it's not")
 	}
 
 	// Test with a formula that doesn't exist
-	linked = IsFormulaLinked(ctx, "nonexistent-formula-12345")
+	linked = IsFormulaLinked(ctx, false, "nonexistent-formula-12345")
 	if linked {
 		t.Error("Expected nonexistent formula to not be linked")
 	}
@@ -71,15 +71,16 @@ func TestIsCaskAppInstalled(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			exists, path := IsCaskAppInstalled(tt.caskName)
 
+			switch tt.caskName {
 			// Only check iTerm if it actually exists
-			if tt.caskName == "iterm2" {
+			case "iterm2":
 				if !exists {
 					t.Skip("iTerm.app not installed, skipping test")
 				}
 				if path != tt.expectedPath {
 					t.Errorf("Expected path %s, got %s", tt.expectedPath, path)
 				}
-			} else if tt.caskName == "nonexistent-app-12345" {
+			case "nonexistent-app-12345":
 				if exists {
 					t.Errorf("Expected app to not exist, but found it at %s", path)
 				}

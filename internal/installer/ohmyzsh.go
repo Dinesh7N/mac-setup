@@ -46,8 +46,8 @@ func InstallOhMyZsh(ctx context.Context) error {
 		_ = os.Remove(scriptPath)
 	}()
 
-	if err := utils.Retry(ctx, utils.RetryOptions{Attempts: 3, BaseDelay: 500 * time.Millisecond}, func(ctx context.Context) error {
-		res, err := utils.Run(ctx, 0, "curl", "-fsSL", "-o", scriptPath, constants.OhMyZshInstallURL)
+	if err := utils.Retry(ctx, false, utils.RetryOptions{Attempts: 3, BaseDelay: 500 * time.Millisecond}, func(ctx context.Context) error {
+		res, err := utils.Run(ctx, false, 0, "curl", "-fsSL", "-o", scriptPath, constants.OhMyZshInstallURL)
 		if err != nil {
 			if strings.TrimSpace(res.Stderr) != "" {
 				return fmt.Errorf("%w: %s", err, strings.TrimSpace(res.Stderr))
@@ -59,7 +59,7 @@ func InstallOhMyZsh(ctx context.Context) error {
 		return err
 	}
 
-	_, err = utils.Run(ctx, 0, "sh", scriptPath, "", "--unattended")
+	_, err = utils.Run(ctx, false, 0, "sh", scriptPath, "", "--unattended")
 	return err
 }
 

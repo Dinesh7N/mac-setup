@@ -33,7 +33,7 @@ func VerifyCriticalTools(ctx context.Context) []VerifyResult {
 		if _, err := exec.LookPath(c.cmd[0]); err != nil {
 			// Not in PATH - try to fix by linking if it's a brew formula
 			if c.brewFormula != "" {
-				if linkErr := LinkFormula(ctx, c.brewFormula); linkErr == nil {
+				if linkErr := LinkFormula(ctx, false, c.brewFormula); linkErr == nil {
 					// Successfully linked, verify again
 					if _, verifyErr := exec.LookPath(c.cmd[0]); verifyErr == nil {
 						results = append(results, VerifyResult{Name: c.name})
@@ -44,7 +44,7 @@ func VerifyCriticalTools(ctx context.Context) []VerifyResult {
 			results = append(results, VerifyResult{Name: c.name, Error: "not found in PATH"})
 			continue
 		}
-		if _, err := utils.Run(ctx, 10*time.Second, c.cmd[0], c.cmd[1:]...); err != nil {
+		if _, err := utils.Run(ctx, false, 10*time.Second, c.cmd[0], c.cmd[1:]...); err != nil {
 			results = append(results, VerifyResult{Name: c.name, Error: err.Error()})
 			continue
 		}

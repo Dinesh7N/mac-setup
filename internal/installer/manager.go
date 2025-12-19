@@ -60,7 +60,7 @@ func (m *Manager) Run(ctx context.Context, selected map[string]bool) (Summary, e
 		results = append(results, InstallResult{Package: task, Status: StatusSkipped, Message: "Already installed"})
 	}
 
-	if !IsBrewInstalled(ctx) {
+	if !IsBrewInstalled(ctx, m.verbose) {
 		task := config.Package{Name: "Homebrew", Type: config.TypeSystem, Category: "core", Required: true, Default: true}
 		m.emit(task, StatusRunning, "", "")
 		status, msg, errStr, dur := timed(ctx, m.verbose, func(ctx context.Context) (InstallStatus, string, error) {
@@ -243,7 +243,7 @@ func (m *Manager) postInstall(ctx context.Context) []InstallResult {
 
 	nvimTask := config.Package{Name: "Neovim config (kickstart)", Type: config.TypeTask, Category: "shell_cli"}
 	m.emit(nvimTask, StatusRunning, "", "")
-	st, msg, errStr, dur = timed(ctx, func(ctx context.Context) (InstallStatus, string, error) {
+	st, msg, errStr, dur = timed(ctx, m.verbose, func(ctx context.Context) (InstallStatus, string, error) {
 		outcome, err := CloneNeovimConfig(ctx)
 		if err != nil {
 			return StatusFailed, "", err
@@ -258,7 +258,7 @@ func (m *Manager) postInstall(ctx context.Context) []InstallResult {
 
 	tpmTask := config.Package{Name: "tmux plugin manager (TPM)", Type: config.TypeTask, Category: "shell_cli"}
 	m.emit(tpmTask, StatusRunning, "", "")
-	st, msg, errStr, dur = timed(ctx, func(ctx context.Context) (InstallStatus, string, error) {
+	st, msg, errStr, dur = timed(ctx, m.verbose, func(ctx context.Context) (InstallStatus, string, error) {
 		outcome, err := CloneTPM(ctx)
 		if err != nil {
 			return StatusFailed, "", err
@@ -273,8 +273,8 @@ func (m *Manager) postInstall(ctx context.Context) []InstallResult {
 
 	miseTask := config.Package{Name: "Mise runtimes", Type: config.TypeTask, Category: "shell_cli"}
 	m.emit(miseTask, StatusRunning, "", "")
-	st, msg, errStr, dur = timed(ctx, func(ctx context.Context) (InstallStatus, string, error) {
-		if _, err := utils.Run(ctx, 0, "mise", "--version"); err != nil {
+	st, msg, errStr, dur = timed(ctx, m.verbose, func(ctx context.Context) (InstallStatus, string, error) {
+		if _, err := utils.Run(ctx, m.verbose, 5*time.Second, "mise", "--version"); err != nil {
 			return StatusSkipped, "mise not installed yet", nil
 		}
 		if err := SetupMise(ctx); err != nil {
@@ -290,7 +290,7 @@ func (m *Manager) postInstall(ctx context.Context) []InstallResult {
 
 	dotTask := config.Package{Name: "Dotfiles", Type: config.TypeTask, Category: "shell_cli"}
 	m.emit(dotTask, StatusRunning, "", "")
-	st, msg, errStr, dur = timed(ctx, func(ctx context.Context) (InstallStatus, string, error) {
+	st, msg, errStr, dur = timed(ctx, m.verbose, func(ctx context.Context) (InstallStatus, string, error) {
 		backupCount, err := WriteDotfiles()
 		if err != nil {
 			return StatusFailed, "", err
@@ -308,7 +308,7 @@ func (m *Manager) postInstall(ctx context.Context) []InstallResult {
 
 	fzfTask := config.Package{Name: "Configure fzf", Type: config.TypeTask, Category: "shell_cli"}
 	m.emit(fzfTask, StatusRunning, "", "")
-	st, msg, errStr, dur = timed(ctx, func(ctx context.Context) (InstallStatus, string, error) {
+	st, msg, errStr, dur = timed(ctx, m.verbose, func(ctx context.Context) (InstallStatus, string, error) {
 		outcome, err := ConfigureFzf(ctx)
 		if err != nil {
 			return StatusFailed, "", err
@@ -345,15 +345,15 @@ func (m *Manager) installFormulas(ctx context.Context, formulas []config.Package
 				msg := ""
 				errStr := ""
 
-				installed, err := IsBrewPackageInstalled(ctx, pkg)
+				installed, err := IsBrewPackageInstalled(ctx, m.verbose, pkg)
 				if err != nil {
 					status = StatusFailed
 					errStr = err.Error()
 				} else if installed {
 					// Package is installed, but check if it's linked
-					if !IsFormulaLinked(ctx, pkg.Name) {
+					if !IsFormulaLinked(ctx, m.verbose, pkg.Name) {
 						// Try to link it
-						if err := LinkFormula(ctx, pkg.Name); err != nil {
+						if err := LinkFormula(ctx, m.verbose, pkg.Name); err != nil {
 							status = StatusFailed
 							errStr = fmt.Sprintf("installed but not linked: %v", err)
 						} else {
@@ -365,7 +365,7 @@ func (m *Manager) installFormulas(ctx context.Context, formulas []config.Package
 						msg = "Already installed"
 					}
 				} else {
-					if err := InstallFormula(ctx, pkg.Name); err != nil {
+					if err := InstallFormula(ctx, m.verbose, pkg.Name); err != nil {
 						status = StatusFailed
 						errStr = classifyInstallError(pkg, err)
 					}
