@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/rand"
 	"encoding/binary"
+	"fmt"
 	"time"
 )
 
@@ -13,7 +14,7 @@ type RetryOptions struct {
 	MaxDelay  time.Duration
 }
 
-func Retry(ctx context.Context, opts RetryOptions, fn func(context.Context) error) error {
+func Retry(ctx context.Context, verbose bool, opts RetryOptions, fn func(context.Context) error) error {
 	attempts := opts.Attempts
 	if attempts <= 0 {
 		attempts = 1
@@ -29,6 +30,9 @@ func Retry(ctx context.Context, opts RetryOptions, fn func(context.Context) erro
 
 	var lastErr error
 	for attempt := 1; attempt <= attempts; attempt++ {
+		if verbose && attempt > 1 {
+			fmt.Printf("Retrying (attempt %d/%d)...\n", attempt, attempts)
+		}
 		if err := fn(ctx); err == nil {
 			return nil
 		} else {

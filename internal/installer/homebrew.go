@@ -25,18 +25,18 @@ func GetBrewExecutable() string {
 	return "/opt/homebrew/bin/brew"
 }
 
-func IsBrewInstalled(ctx context.Context) bool {
+func IsBrewInstalled(ctx context.Context, verbose bool) bool {
 	brewCmd := GetBrewExecutable()
-	_, err := utils.Run(ctx, 5*time.Second, brewCmd, "--version")
+	_, err := utils.Run(ctx, verbose, 5*time.Second, brewCmd, "--version")
 	return err == nil
 }
 
-func InstallBrew(ctx context.Context) error {
+func InstallBrew(ctx context.Context, verbose bool) error {
 	dir := os.TempDir()
 	script := filepath.Join(dir, "macsetup-homebrew-install.sh")
 
-	if err := utils.Retry(ctx, utils.RetryOptions{Attempts: 3, BaseDelay: 500 * time.Millisecond}, func(ctx context.Context) error {
-		_, err := utils.Run(ctx, 0, "curl", "-fsSL", "-o", script, constants.HomebrewInstallScriptURL)
+	if err := utils.Retry(ctx, verbose, utils.RetryOptions{Attempts: 3, BaseDelay: 500 * time.Millisecond}, func(ctx context.Context) error {
+		_, err := utils.Run(ctx, verbose, 0, "curl", "-fsSL", "-o", script, constants.HomebrewInstallScriptURL)
 		return err
 	}); err != nil {
 		return err
@@ -59,32 +59,32 @@ func InstallBrew(ctx context.Context) error {
 	return nil
 }
 
-func BrewUpdate(ctx context.Context) error {
+func BrewUpdate(ctx context.Context, verbose bool) error {
 	brewMutex.Lock()
 	defer brewMutex.Unlock()
-	return utils.Retry(ctx, utils.RetryOptions{Attempts: 3, BaseDelay: 300 * time.Millisecond}, func(ctx context.Context) error {
-		_, err := utils.Run(ctx, 0, GetBrewExecutable(), "update")
+	return utils.Retry(ctx, verbose, utils.RetryOptions{Attempts: 3, BaseDelay: 300 * time.Millisecond}, func(ctx context.Context) error {
+		_, err := utils.Run(ctx, verbose, 0, GetBrewExecutable(), "update")
 		return err
 	})
 }
 
-func BrewUpgrade(ctx context.Context) error {
+func BrewUpgrade(ctx context.Context, verbose bool) error {
 	brewMutex.Lock()
 	defer brewMutex.Unlock()
-	return utils.Retry(ctx, utils.RetryOptions{Attempts: 3, BaseDelay: 300 * time.Millisecond}, func(ctx context.Context) error {
-		_, err := utils.Run(ctx, 0, GetBrewExecutable(), "upgrade")
+	return utils.Retry(ctx, verbose, utils.RetryOptions{Attempts: 3, BaseDelay: 300 * time.Millisecond}, func(ctx context.Context) error {
+		_, err := utils.Run(ctx, verbose, 0, GetBrewExecutable(), "upgrade")
 		return err
 	})
 }
 
-func AddTap(ctx context.Context, tap string) error {
+func AddTap(ctx context.Context, verbose bool, tap string) error {
 	if tap == "" {
 		return nil
 	}
 	brewMutex.Lock()
 	defer brewMutex.Unlock()
-	return utils.Retry(ctx, utils.RetryOptions{Attempts: 3, BaseDelay: 300 * time.Millisecond}, func(ctx context.Context) error {
-		res, err := utils.Run(ctx, 0, GetBrewExecutable(), "tap", tap)
+	return utils.Retry(ctx, verbose, utils.RetryOptions{Attempts: 3, BaseDelay: 300 * time.Millisecond}, func(ctx context.Context) error {
+		res, err := utils.Run(ctx, verbose, 0, GetBrewExecutable(), "tap", tap)
 		if err != nil {
 			if strings.TrimSpace(res.Stderr) != "" {
 				return fmt.Errorf("%w: %s", err, strings.TrimSpace(res.Stderr))
@@ -95,11 +95,11 @@ func AddTap(ctx context.Context, tap string) error {
 	})
 }
 
-func IsTapInstalled(ctx context.Context, tap string) (bool, error) {
+func IsTapInstalled(ctx context.Context, verbose bool, tap string) (bool, error) {
 	if tap == "" {
 		return true, nil
 	}
-	res, err := utils.Run(ctx, 0, GetBrewExecutable(), "tap")
+	res, err := utils.Run(ctx, verbose, 0, GetBrewExecutable(), "tap")
 	if err != nil {
 		return false, err
 	}
@@ -111,11 +111,11 @@ func IsTapInstalled(ctx context.Context, tap string) (bool, error) {
 	return false, nil
 }
 
-func InstallFormula(ctx context.Context, name string) error {
+func InstallFormula(ctx context.Context, verbose bool, name string) error {
 	brewMutex.Lock()
 	defer brewMutex.Unlock()
-	return utils.Retry(ctx, utils.RetryOptions{Attempts: 3, BaseDelay: 500 * time.Millisecond}, func(ctx context.Context) error {
-		res, err := utils.Run(ctx, 0, GetBrewExecutable(), "install", name)
+	return utils.Retry(ctx, verbose, utils.RetryOptions{Attempts: 3, BaseDelay: 500 * time.Millisecond}, func(ctx context.Context) error {
+		res, err := utils.Run(ctx, verbose, 0, GetBrewExecutable(), "install", name)
 		if err != nil {
 			if strings.TrimSpace(res.Stderr) != "" {
 				return fmt.Errorf("%w: %s", err, strings.TrimSpace(res.Stderr))
@@ -126,10 +126,10 @@ func InstallFormula(ctx context.Context, name string) error {
 	})
 }
 
-func LinkFormula(ctx context.Context, name string) error {
+func LinkFormula(ctx context.Context, verbose bool, name string) error {
 	brewMutex.Lock()
 	defer brewMutex.Unlock()
-	res, err := utils.Run(ctx, 10*time.Second, GetBrewExecutable(), "link", "--overwrite", name)
+	res, err := utils.Run(ctx, verbose, 10*time.Second, GetBrewExecutable(), "link", "--overwrite", name)
 	if err != nil {
 		// Check if it's already linked
 		if strings.Contains(res.Stderr, "already linked") || strings.Contains(res.Stdout, "already linked") {
@@ -143,11 +143,11 @@ func LinkFormula(ctx context.Context, name string) error {
 	return nil
 }
 
-func ReinstallFormula(ctx context.Context, name string) error {
+func ReinstallFormula(ctx context.Context, verbose bool, name string) error {
 	brewMutex.Lock()
 	defer brewMutex.Unlock()
-	return utils.Retry(ctx, utils.RetryOptions{Attempts: 3, BaseDelay: 500 * time.Millisecond}, func(ctx context.Context) error {
-		res, err := utils.Run(ctx, 0, GetBrewExecutable(), "reinstall", name)
+	return utils.Retry(ctx, verbose, utils.RetryOptions{Attempts: 3, BaseDelay: 500 * time.Millisecond}, func(ctx context.Context) error {
+		res, err := utils.Run(ctx, verbose, 0, GetBrewExecutable(), "reinstall", name)
 		if err != nil {
 			if strings.TrimSpace(res.Stderr) != "" {
 				return fmt.Errorf("%w: %s", err, strings.TrimSpace(res.Stderr))
@@ -158,11 +158,11 @@ func ReinstallFormula(ctx context.Context, name string) error {
 	})
 }
 
-func InstallCask(ctx context.Context, name string) error {
+func InstallCask(ctx context.Context, verbose bool, name string) error {
 	brewMutex.Lock()
 	defer brewMutex.Unlock()
-	return utils.Retry(ctx, utils.RetryOptions{Attempts: 3, BaseDelay: 500 * time.Millisecond}, func(ctx context.Context) error {
-		res, err := utils.Run(ctx, 0, GetBrewExecutable(), "install", "--cask", name)
+	return utils.Retry(ctx, verbose, utils.RetryOptions{Attempts: 3, BaseDelay: 500 * time.Millisecond}, func(ctx context.Context) error {
+		res, err := utils.Run(ctx, verbose, 0, GetBrewExecutable(), "install", "--cask", name)
 		if err != nil {
 			if strings.TrimSpace(res.Stderr) != "" {
 				return fmt.Errorf("%w: %s", err, strings.TrimSpace(res.Stderr))
@@ -173,11 +173,11 @@ func InstallCask(ctx context.Context, name string) error {
 	})
 }
 
-func ReinstallCask(ctx context.Context, name string) error {
+func ReinstallCask(ctx context.Context, verbose bool, name string) error {
 	brewMutex.Lock()
 	defer brewMutex.Unlock()
-	return utils.Retry(ctx, utils.RetryOptions{Attempts: 3, BaseDelay: 500 * time.Millisecond}, func(ctx context.Context) error {
-		res, err := utils.Run(ctx, 0, GetBrewExecutable(), "reinstall", "--cask", name)
+	return utils.Retry(ctx, verbose, utils.RetryOptions{Attempts: 3, BaseDelay: 500 * time.Millisecond}, func(ctx context.Context) error {
+		res, err := utils.Run(ctx, verbose, 0, GetBrewExecutable(), "reinstall", "--cask", name)
 		if err != nil {
 			if strings.TrimSpace(res.Stderr) != "" {
 				return fmt.Errorf("%w: %s", err, strings.TrimSpace(res.Stderr))
@@ -188,13 +188,13 @@ func ReinstallCask(ctx context.Context, name string) error {
 	})
 }
 
-func IsBrewPackageInstalled(ctx context.Context, pkg config.Package) (bool, error) {
+func IsBrewPackageInstalled(ctx context.Context, verbose bool, pkg config.Package) (bool, error) {
 	switch pkg.Type {
 	case config.TypeFormula:
-		_, err := utils.Run(ctx, 0, GetBrewExecutable(), "list", "--formula", pkg.Name)
+		_, err := utils.Run(ctx, verbose, 0, GetBrewExecutable(), "list", "--formula", pkg.Name)
 		return err == nil, nil
 	case config.TypeCask:
-		_, err := utils.Run(ctx, 0, GetBrewExecutable(), "list", "--cask", pkg.Name)
+		_, err := utils.Run(ctx, verbose, 0, GetBrewExecutable(), "list", "--cask", pkg.Name)
 		return err == nil, nil
 	default:
 		return false, nil
@@ -235,9 +235,9 @@ func IsCaskAppInstalled(caskName string) (bool, string) {
 }
 
 // IsFormulaLinked checks if a formula is properly linked in /opt/homebrew/bin
-func IsFormulaLinked(ctx context.Context, name string) bool {
+func IsFormulaLinked(ctx context.Context, verbose bool, name string) bool {
 	// Use brew info to check if the package has a linked_keg
-	res, err := utils.Run(ctx, 5*time.Second, GetBrewExecutable(), "info", "--json=v2", name)
+	res, err := utils.Run(ctx, verbose, 5*time.Second, GetBrewExecutable(), "info", "--json=v2", name)
 	if err != nil {
 		return false
 	}

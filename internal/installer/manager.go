@@ -42,7 +42,7 @@ func (m *Manager) Run(ctx context.Context, selected map[string]bool) (Summary, e
 	if !IsXcodeInstalled(ctx) {
 		task := config.Package{Name: "Xcode CLI Tools", Type: config.TypeSystem, Category: "core", Required: true, Default: true}
 		m.emit(task, StatusRunning, "", "")
-		status, msg, errStr, dur := timed(ctx, func(ctx context.Context) (InstallStatus, string, error) {
+		status, msg, errStr, dur := timed(ctx, m.verbose, func(ctx context.Context) (InstallStatus, string, error) {
 			_ = TriggerXcodeInstall(ctx)
 			if err := WaitForXcode(ctx, 2*time.Second); err != nil {
 				return StatusFailed, "", err
@@ -63,8 +63,8 @@ func (m *Manager) Run(ctx context.Context, selected map[string]bool) (Summary, e
 	if !IsBrewInstalled(ctx) {
 		task := config.Package{Name: "Homebrew", Type: config.TypeSystem, Category: "core", Required: true, Default: true}
 		m.emit(task, StatusRunning, "", "")
-		status, msg, errStr, dur := timed(ctx, func(ctx context.Context) (InstallStatus, string, error) {
-			if err := InstallBrew(ctx); err != nil {
+		status, msg, errStr, dur := timed(ctx, m.verbose, func(ctx context.Context) (InstallStatus, string, error) {
+			if err := InstallBrew(ctx, m.verbose); err != nil {
 				return StatusFailed, "", err
 			}
 			return StatusInstalled, "", nil
@@ -83,11 +83,11 @@ func (m *Manager) Run(ctx context.Context, selected map[string]bool) (Summary, e
 	{
 		task := config.Package{Name: "Homebrew update", Type: config.TypeTask, Category: "core", Required: true, Default: true}
 		m.emit(task, StatusRunning, "", "")
-		status, msg, errStr, dur := timed(ctx, func(ctx context.Context) (InstallStatus, string, error) {
-			if err := BrewUpdate(ctx); err != nil {
-				return StatusFailed, "", err
+		status, msg, errStr, dur := timed(ctx, m.verbose, func(ctx context.Context) (InstallStatus, string, error) {
+			if err := BrewUpdate(ctx, m.verbose); err != nil {
+				return StatusSkipped, "Update failed (non-critical)", nil
 			}
-			if err := BrewUpgrade(ctx); err != nil {
+			if err := BrewUpgrade(ctx, m.verbose); err != nil {
 				return StatusFailed, "", err
 			}
 			return StatusInstalled, "", nil
@@ -103,15 +103,15 @@ func (m *Manager) Run(ctx context.Context, selected map[string]bool) (Summary, e
 
 	for _, tap := range taps {
 		m.emit(tap, StatusRunning, "", "")
-		status, msg, errStr, dur := timed(ctx, func(ctx context.Context) (InstallStatus, string, error) {
-			installed, err := IsTapInstalled(ctx, tap.Tap)
+		status, msg, errStr, dur := timed(ctx, m.verbose, func(ctx context.Context) (InstallStatus, string, error) {
+			installed, err := IsTapInstalled(ctx, m.verbose, tap.Tap)
 			if err != nil {
 				return StatusFailed, "", err
 			}
 			if installed {
 				return StatusSkipped, "Already tapped", nil
 			}
-			if err := AddTap(ctx, tap.Tap); err != nil {
+			if err := AddTap(ctx, m.verbose, tap.Tap); err != nil {
 				return StatusFailed, "", err
 			}
 			return StatusInstalled, "", nil
@@ -126,9 +126,9 @@ func (m *Manager) Run(ctx context.Context, selected map[string]bool) (Summary, e
 	results = append(results, m.installFormulas(ctx, formulas)...)
 	for _, cask := range casks {
 		m.emit(cask, StatusRunning, "", "")
-		status, msg, errStr, dur := timed(ctx, func(ctx context.Context) (InstallStatus, string, error) {
+		status, msg, errStr, dur := timed(ctx, m.verbose, func(ctx context.Context) (InstallStatus, string, error) {
 			// First check if installed via Homebrew
-			installed, err := IsBrewPackageInstalled(ctx, cask)
+			installed, err := IsBrewPackageInstalled(ctx, m.verbose, cask)
 			if err != nil {
 				return StatusFailed, "", err
 			}
@@ -142,7 +142,7 @@ func (m *Manager) Run(ctx context.Context, selected map[string]bool) (Summary, e
 				return StatusSkipped, fmt.Sprintf("Already installed at %s", appPath), nil
 			}
 
-			if err := InstallCask(ctx, cask.Name); err != nil {
+			if err := InstallCask(ctx, m.verbose, cask.Name); err != nil {
 				return StatusFailed, "", err
 			}
 			return StatusInstalled, "", nil
@@ -190,7 +190,7 @@ func (m *Manager) postInstall(ctx context.Context) []InstallResult {
 
 	dirsTask := config.Package{Name: "Create config directories", Type: config.TypeTask, Category: "core"}
 	m.emit(dirsTask, StatusRunning, "", "")
-	st, msg, errStr, dur := timed(ctx, func(ctx context.Context) (InstallStatus, string, error) {
+	st, msg, errStr, dur := timed(ctx, m.verbose, func(ctx context.Context) (InstallStatus, string, error) {
 		if err := CreateConfigDirectories(); err != nil {
 			return StatusFailed, "", err
 		}
@@ -204,7 +204,7 @@ func (m *Manager) postInstall(ctx context.Context) []InstallResult {
 
 	ohTask := config.Package{Name: "Oh My Zsh", Type: config.TypeTask, Category: "shell_cli"}
 	m.emit(ohTask, StatusRunning, "", "")
-	st, msg, errStr, dur = timed(ctx, func(ctx context.Context) (InstallStatus, string, error) {
+	st, msg, errStr, dur = timed(ctx, m.verbose, func(ctx context.Context) (InstallStatus, string, error) {
 		installed, err := IsOhMyZshInstalled()
 		if err != nil {
 			return StatusFailed, "", err
@@ -225,7 +225,7 @@ func (m *Manager) postInstall(ctx context.Context) []InstallResult {
 
 	pluginsTask := config.Package{Name: "Zsh plugins", Type: config.TypeTask, Category: "shell_cli"}
 	m.emit(pluginsTask, StatusRunning, "", "")
-	st, msg, errStr, dur = timed(ctx, func(ctx context.Context) (InstallStatus, string, error) {
+	st, msg, errStr, dur = timed(ctx, m.verbose, func(ctx context.Context) (InstallStatus, string, error) {
 		outcome, err := InstallZshPlugins(ctx)
 		if err != nil {
 			return StatusFailed, "", err

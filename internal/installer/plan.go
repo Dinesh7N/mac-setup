@@ -114,10 +114,13 @@ func selectedPackages(selected map[string]bool) []config.Package {
 	return pkgs
 }
 
-func timed(ctx context.Context, fn func(context.Context) (InstallStatus, string, error)) (InstallStatus, string, string, time.Duration) {
+func timed(ctx context.Context, verbose bool, fn func(context.Context) (InstallStatus, string, error)) (InstallStatus, string, string, time.Duration) {
 	start := time.Now()
 	st, msg, err := fn(ctx)
 	d := time.Since(start)
+	if verbose {
+		fmt.Printf("DEBUG: Operation took %s\n", d)
+	}
 	if err == nil {
 		return st, msg, "", d
 	}
