@@ -32,19 +32,17 @@ func Execute(version, commit, date string) {
 			defer stop()
 
 			var out io.Writer = os.Stdout
-			var closeOut func() error
+			var logWriter io.Writer
 			if logFile != "" {
 				f, err := os.OpenFile(logFile, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0o644)
 				if err != nil {
 					return err
 				}
-				closeOut = f.Close
-				out = io.MultiWriter(os.Stdout, f)
-			}
-			if closeOut != nil {
-				defer func() {
-					_ = closeOut()
-				}()
+				defer func() { _ = f.Close() }()
+				logWriter = f
+				if headless {
+					out = io.MultiWriter(os.Stdout, f)
+				}
 			}
 
 			if dryRun {
@@ -67,7 +65,7 @@ func Execute(version, commit, date string) {
 				return nil
 			}
 
-			return tui.Run(ctx, workers, verbose)
+			return tui.Run(ctx, workers, verbose, logWriter)
 		},
 	}
 
