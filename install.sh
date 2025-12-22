@@ -49,7 +49,7 @@ echo "Starting setup... Logs will be available at $LOG_FILE"
 echo ""
 
 # Execute with logging
-if ! "$BINARY" | tee "$LOG_FILE"; then
+if ! "$BINARY" --log-file "$LOG_FILE"; then
     echo ""
     echo -e "${RED}Installation failed.${NC}"
     echo "Please check the log file for details: $LOG_FILE"

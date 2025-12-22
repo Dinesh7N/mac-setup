@@ -3,6 +3,7 @@ package tui
 import (
 	"context"
 	"fmt"
+	"io"
 	"sort"
 	"strings"
 	"time"
@@ -13,6 +14,7 @@ import (
 	"github.com/charmbracelet/bubbles/progress"
 	"github.com/charmbracelet/bubbles/spinner"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/glamour"
 	"github.com/charmbracelet/lipgloss"
 )
 
@@ -25,6 +27,7 @@ const (
 	StateXcodeWait
 	StateInstalling
 	StateSummary
+	StateHelp
 )
 
 type Model struct {
@@ -63,6 +66,10 @@ type Model struct {
 	installedPackages map[string]string // name -> message
 	failedPackages    map[string]string // name -> error
 	runningPackages   map[string]string // name -> message
+
+	logger io.Writer
+
+	previousState AppState
 }
 
 type listItem struct {
@@ -85,14 +92,14 @@ type (
 )
 type errMsg struct{ err error }
 
-func Run(ctx context.Context, workers int, verbose bool) error {
-	m := newModel(ctx, workers, verbose)
+func Run(ctx context.Context, workers int, verbose bool, logger io.Writer) error {
+	m := newModel(ctx, workers, verbose, logger)
 	p := tea.NewProgram(m, tea.WithAltScreen(), tea.WithContext(ctx))
 	_, err := p.Run()
 	return err
 }
 
-func newModel(ctx context.Context, workers int, verbose bool) Model {
+func newModel(ctx context.Context, workers int, verbose bool, logger io.Writer) Model {
 	spin := spinner.New()
 	spin.Spinner = spinner.Dot
 
@@ -112,6 +119,7 @@ func newModel(ctx context.Context, workers int, verbose bool) Model {
 		installedPackages: make(map[string]string),
 		failedPackages:    make(map[string]string),
 		runningPackages:   make(map[string]string),
+		logger:            logger,
 	}
 
 	// Collapse all categories by default
@@ -193,9 +201,22 @@ func (m Model) handleKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	switch msg.String() {
 	case "ctrl+c", "q":
 		return m, tea.Quit
+	case "?":
+		if m.state != StateHelp {
+			m.previousState = m.state
+			m.state = StateHelp
+		} else {
+			m.state = m.previousState
+		}
+		return m, nil
 	}
 
 	switch m.state {
+	case StateHelp:
+		if msg.String() == "enter" || msg.String() == "esc" {
+			m.state = m.previousState
+		}
+		return m, nil
 	case StateWelcome:
 		if msg.String() == "enter" {
 			m.state = StateScanning
@@ -437,6 +458,20 @@ func (m Model) waitForXcode() tea.Cmd {
 func (m Model) applyUpdate(upd installer.ProgressUpdate) Model {
 	pkgName := upd.Package.Name
 
+	if m.logger != nil {
+		timestamp := time.Now().Format("15:04:05")
+		statusStr := string(upd.Status)
+		msg := upd.Message
+		if upd.Error != "" {
+			msg = upd.Error
+		}
+		if msg != "" {
+			_, _ = fmt.Fprintf(m.logger, "[%s] %-12s %-25s %s\n", timestamp, statusStr, pkgName, msg)
+		} else {
+			_, _ = fmt.Fprintf(m.logger, "[%s] %-12s %-25s\n", timestamp, statusStr, pkgName)
+		}
+	}
+
 	switch upd.Status {
 	case installer.StatusRunning:
 		// Remove from other states if present
@@ -501,13 +536,47 @@ func (m Model) View() string {
 		return installingView(m)
 	case StateSummary:
 		return summaryView(m)
+	case StateHelp:
+		return helpView(m)
 	default:
 		return "unknown state\n"
 	}
 }
 
+const helpMarkdown = `
+# Mac Setup Help
+
+## Navigation
+- **Up/Down** or **j/k**: Navigate the list
+- **Space**: Toggle package selection
+- **Enter**: Start installation (or enter a category)
+- **a**: Select all in section
+- **n**: Deselect all in section
+- **?**: Toggle this help view
+- **q / Ctrl+C**: Quit
+
+## Symbols
+- ` + "`[ ]`" + `: Not selected
+- ` + "`[x]`" + `: Selected for installation
+- ` + "`[✓]`" + `: Already installed
+- ` + "`[+]`" + `: Category collapsed
+- ` + "`[-]`" + `: Category expanded
+
+## Logs
+Detailed logs are written to the path specified in the ` + "`--log-file`" + ` flag.
+`
+
+func helpView(m Model) string {
+	r, _ := glamour.NewTermRenderer(
+		glamour.WithAutoStyle(),
+		glamour.WithWordWrap(m.width-4),
+	)
+	out, _ := r.Render(helpMarkdown)
+	return lipgloss.NewStyle().Padding(1, 2).Render(out) + "\n" + dimStyle.Render("Press Enter or ? to return")
+}
+
 func welcomeView(width int) string {
-	msg := titleStyle.Render("Team Mac Onboarding Tool") + "\n\nPress Enter to continue\nPress q to quit\n"
+	msg := titleStyle.Render("Team Mac Onboarding Tool") + "\n\nPress Enter to continue\nPress ? for help\nPress q to quit\n"
 	box := lipgloss.NewStyle().Padding(1, 2).Border(lipgloss.RoundedBorder(), true).BorderForeground(oneDarkBlue).Width(min(width-4, 72))
 	return box.Render(msg)
 }
@@ -623,7 +692,7 @@ func selectionView(m Model) string {
 		b.WriteString(strings.Repeat("\n", viewHeight-rowsRendered))
 	}
 
-	b.WriteString(dimStyle.Render("\n[↑↓] Navigate  [Space] Toggle  [a] Select section  [n] Deselect section  [Enter] Start"))
+	b.WriteString(dimStyle.Render("\n[↑↓] Navigate  [Space] Toggle  [a] Select section  [n] Deselect section  [?] Help  [Enter] Start"))
 	return b.String()
 }
 
