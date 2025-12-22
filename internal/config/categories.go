@@ -21,7 +21,6 @@ func Categories() []Category {
 		{Key: "programming", Name: "Programming Utilities", Description: "Compilers, runtimes, and tools", Required: false, Selectable: true},
 		{Key: "devops", Name: "DevOps", Description: "Infrastructure and DevOps tools", Required: false, Selectable: true},
 		{Key: "ai", Name: "AI Tools", Description: "AI assistants and tools", Required: false, Selectable: true},
-		{Key: "communication", Name: "Communication", Description: "Communication tools", Required: false, Selectable: true},
 		{Key: "optional", Name: "Optional Apps", Description: "Optional applications", Required: false, Selectable: true},
 	}
 }
