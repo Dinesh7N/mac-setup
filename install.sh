@@ -24,18 +24,25 @@ echo -e "${GREEN}✓${NC} macOS on Apple Silicon detected"
 
 REPO="Dinesh7N/mac-setup"
 
-echo "Fetching latest release..."
-LATEST=$(curl -sL "https://api.github.com/repos/${REPO}/releases/latest" | grep '"tag_name"' | cut -d'"' -f4 || true)
-if [[ -z "${LATEST}" ]]; then
-  echo -e "${RED}Error: Could not fetch latest release (Repository might be private or have no releases)${NC}"
-  exit 1
+if [[ -z "${VERSION:-}" ]]; then
+  echo "Fetching latest release..."
+  VERSION=$(curl -sL "https://api.github.com/repos/${REPO}/releases/latest" | grep '"tag_name"' | cut -d'"' -f4 || true)
+  if [[ -z "${VERSION}" ]]; then
+    echo -e "${RED}Error: Could not fetch latest release (Repository might be private or have no releases)${NC}"
+    exit 1
+  fi
+else
+  echo "Using specified version: ${VERSION}"
 fi
 
-URL="https://github.com/${REPO}/releases/download/${LATEST}/macsetup-darwin-arm64"
+URL="https://github.com/${REPO}/releases/download/${VERSION}/macsetup-darwin-arm64"
 BINARY="/tmp/macsetup"
 
-echo "Downloading macsetup ${LATEST}..."
-curl -sL "$URL" -o "$BINARY"
+echo "Downloading macsetup ${VERSION}..."
+if ! curl -sLf "$URL" -o "$BINARY"; then
+    echo -e "${RED}Error: Failed to download version ${VERSION}. Please ensure the version exists.${NC}"
+    exit 1
+fi
 chmod +x "$BINARY"
 
 # Remove quarantine attribute to prevent Gatekeeper from blocking execution
