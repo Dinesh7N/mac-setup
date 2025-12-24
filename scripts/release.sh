@@ -31,13 +31,9 @@ fi
 echo -e "${BLUE}Creating release ${VERSION}${NC}"
 echo ""
 
-# Check if tag already exists
+TAG_EXISTS=false
 if git rev-parse "$VERSION" >/dev/null 2>&1; then
-    echo -e "${RED}Error: Tag ${VERSION} already exists${NC}"
-    echo "To re-release, delete the tag first:"
-    echo "  git tag -d ${VERSION}"
-    echo "  git push origin :refs/tags/${VERSION}"
-    exit 1
+    TAG_EXISTS=true
 fi
 
 # Check for uncommitted changes
@@ -61,8 +57,12 @@ echo ""
 
 # Create git tag
 echo -e "${BLUE}Step 2/4: Creating git tag${NC}"
-git tag -a "${VERSION}" -m "Release ${VERSION}"
-echo -e "${GREEN}✓${NC} Tag created: ${VERSION}"
+if [ "${TAG_EXISTS}" = true ]; then
+    echo -e "${YELLOW}Tag ${VERSION} already exists. Skipping tag creation.${NC}"
+else
+    git tag -a "${VERSION}" -m "Release ${VERSION}"
+    echo -e "${GREEN}✓${NC} Tag created: ${VERSION}"
+fi
 echo ""
 
 # Push tag to remote
@@ -73,8 +73,13 @@ echo ""
 
 # Upload to GitHub releases
 echo -e "${BLUE}Step 4/4: Uploading to GitHub releases${NC}"
-gh release upload "${VERSION}" "bin/${BINARY_NAME}" --clobber
-echo -e "${GREEN}✓${NC} Binary uploaded to GitHub release"
+if gh release view "${VERSION}" >/dev/null 2>&1; then
+    gh release upload "${VERSION}" "bin/${BINARY_NAME}" --clobber
+    echo -e "${GREEN}✓${NC} Binary uploaded to GitHub release"
+else
+    gh release create "${VERSION}" "bin/${BINARY_NAME}" --title "${VERSION}" --generate-notes
+    echo -e "${GREEN}✓${NC} Release created and binary uploaded${NC}"
+fi
 echo ""
 
 echo -e "${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
