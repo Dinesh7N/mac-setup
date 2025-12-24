@@ -77,6 +77,7 @@ func AllPackages() []Package {
 
 		// Python
 		{Name: "poetry", Type: TypeFormula, Category: "programming", SubCategory: "python", Default: false, Description: "Python package management tool"},
+		{Name: "uv", Type: TypeFormula, Category: "programming", SubCategory: "python", Default: false, Description: "Extremely fast Python package installer and resolver"},
 		{Name: "ruff", Type: TypeFormula, Category: "programming", SubCategory: "python", Default: false, Description: "Extremely fast Python linter, written in Rust"},
 		{Name: "ty", Type: TypeFormula, Category: "programming", SubCategory: "python", Default: false, Description: "Extremely fast Python type checker, written in Rust"},
 		{Name: "black", Type: TypeFormula, Category: "programming", SubCategory: "python", Default: false, Description: "Python code formatter"},

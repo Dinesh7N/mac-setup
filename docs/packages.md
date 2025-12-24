@@ -66,6 +66,7 @@ Reference list of Homebrew packages used by this repo.
 | `tree` | `formula` | `shell_cli` | `` | Display directories as trees (with optional color/HTML output) | https://formulae.brew.sh/formula/tree |
 | `trivy` | `formula` | `devops` | `` | Vulnerability scanner for container images, file systems, and Git repos | https://formulae.brew.sh/formula/trivy |
 | `ty` | `formula` | `programming` | `python` | Extremely fast Python type checker, written in Rust | https://formulae.brew.sh/formula/ty |
+| `uv` | `formula` | `programming` | `python` | Extremely fast Python package installer and resolver | https://formulae.brew.sh/formula/uv |
 | `visual-studio-code` | `cask` | `editors` | `` | Open-source code editor | https://formulae.brew.sh/cask/visual-studio-code |
 | `zed` | `cask` | `editors` | `` | Multiplayer code editor | https://formulae.brew.sh/cask/zed |
 | `zellij` | `formula` | `shell_cli` | `` | Pluggable terminal workspace, with terminal multiplexer as the base feature | https://formulae.brew.sh/formula/zellij |
