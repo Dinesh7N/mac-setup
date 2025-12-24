@@ -24,8 +24,6 @@ Reference list of Homebrew packages used by this repo.
 | `deno` | `formula` | `programming` | `nodejs` | Secure runtime for JavaScript and TypeScript | https://formulae.brew.sh/formula/deno |
 | `eslint` | `formula` | `programming` | `nodejs` | AST-based pattern checker for JavaScript | https://formulae.brew.sh/formula/eslint |
 | `firefox` | `cask` | `browsers` | `` | Web browser | https://formulae.brew.sh/cask/firefox |
-| `font-sf-mono` | `cask` | `shell_cli` | `` | SF Mono font | https://formulae.brew.sh/cask/font-sf-mono |
-| `font-sf-pro` | `cask` | `shell_cli` | `` | SF Pro font | https://formulae.brew.sh/cask/font-sf-pro |
 | `fzf` | `formula` | `shell_cli` | `` | Command-line fuzzy finder written in Go | https://formulae.brew.sh/formula/fzf |
 | `gemini-cli` | `formula` | `ai` | `` | Interact with Google Gemini AI models from the command-line | https://formulae.brew.sh/formula/gemini-cli |
 | `gh` | `formula` | `shell_cli` | `` | GitHub command-line tool | https://formulae.brew.sh/formula/gh |
@@ -42,7 +40,6 @@ Reference list of Homebrew packages used by this repo.
 | `iterm2` | `cask` | `terminals` | `` | Terminal emulator as alternative to Apple's Terminal app | https://formulae.brew.sh/cask/iterm2 |
 | `jetbrains-toolbox` | `cask` | `editors` | `` | JetBrains tools manager | https://formulae.brew.sh/cask/jetbrains-toolbox |
 | `jq` | `formula` | `shell_cli` | `` | Lightweight and flexible command-line JSON processor | https://formulae.brew.sh/formula/jq |
-| `microsoft-teams` | `cask` | `communication` | `` | Meet, chat, call, and collaborate in just one place | https://formulae.brew.sh/cask/microsoft-teams |
 | `mise` | `formula` | `programming` | `others` | Polyglot runtime manager (asdf rust clone) | https://formulae.brew.sh/formula/mise |
 | `neovim` | `formula` | `shell_cli` | `` | Ambitious Vim-fork focused on extensibility and agility | https://formulae.brew.sh/formula/neovim |
 | `opa` | `formula` | `devops` | `` | Open source, general-purpose policy engine | https://formulae.brew.sh/formula/opa |
@@ -68,8 +65,8 @@ Reference list of Homebrew packages used by this repo.
 | `tmux` | `formula` | `shell_cli` | `` | Terminal multiplexer | https://formulae.brew.sh/formula/tmux |
 | `tree` | `formula` | `shell_cli` | `` | Display directories as trees (with optional color/HTML output) | https://formulae.brew.sh/formula/tree |
 | `trivy` | `formula` | `devops` | `` | Vulnerability scanner for container images, file systems, and Git repos | https://formulae.brew.sh/formula/trivy |
-| `twingate` | `cask` | `dev_env` | `` | Zero trust network access platform | https://formulae.brew.sh/cask/twingate |
 | `ty` | `formula` | `programming` | `python` | Extremely fast Python type checker, written in Rust | https://formulae.brew.sh/formula/ty |
+| `uv` | `formula` | `programming` | `python` | Extremely fast Python package installer and resolver | https://formulae.brew.sh/formula/uv |
 | `visual-studio-code` | `cask` | `editors` | `` | Open-source code editor | https://formulae.brew.sh/cask/visual-studio-code |
 | `zed` | `cask` | `editors` | `` | Multiplayer code editor | https://formulae.brew.sh/cask/zed |
 | `zellij` | `formula` | `shell_cli` | `` | Pluggable terminal workspace, with terminal multiplexer as the base feature | https://formulae.brew.sh/formula/zellij |

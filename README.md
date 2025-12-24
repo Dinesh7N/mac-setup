@@ -52,7 +52,8 @@ This script will:
 *   **Terminals**: Ghostty, iTerm2, Zellij.
 *   **Editors**: VS Code, Zed, Sublime Text, Neovim.
 *   **Dev Tools**: Docker (OrbStack), Postgres, Redis, Python/Go/Node.js tooling.
-*   **Apps**: Browsers, Productivity tools, Fonts.
+*   **Apps**: Browsers, Productivity tools.
+*   **Fonts**: Please install [SF Pro and SF Mono](https://developer.apple.com/fonts/) fonts directly from Apple.
 
 ## Package Links
 

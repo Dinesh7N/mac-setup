@@ -43,8 +43,6 @@ func AllPackages() []Package {
 		{Name: "neovim", Type: TypeFormula, Category: "shell_cli", Required: true, Default: true, Description: "Ambitious Vim-fork focused on extensibility and agility"},
 		{Name: "tmux", Type: TypeFormula, Category: "shell_cli", Required: true, Default: true, Description: "Terminal multiplexer"},
 		{Name: "zellij", Type: TypeFormula, Category: "shell_cli", Required: true, Default: true, Description: "Pluggable terminal workspace, with terminal multiplexer as the base feature"},
-		{Name: "font-sf-mono", Type: TypeCask, Category: "shell_cli", Required: true, Default: true, Description: "SF Mono font"},
-		{Name: "font-sf-pro", Type: TypeCask, Category: "shell_cli", Required: true, Default: true, Description: "SF Pro font"},
 
 		// Terminals
 		{Name: "iterm2", Type: TypeCask, Category: "terminals", Default: true, Description: "Terminal emulator as alternative to Apple's Terminal app"},
@@ -69,7 +67,6 @@ func AllPackages() []Package {
 		{Name: "orbstack", Type: TypeCask, Category: "dev_env", Default: false, Description: "Replacement for Docker Desktop"},
 		{Name: "postgresql@17", Type: TypeFormula, Category: "dev_env", Default: false, Description: "Object-relational database system"},
 		{Name: "redis", Type: TypeFormula, Category: "dev_env", Default: false, Description: "Persistent key-value database, with built-in net interface"},
-		{Name: "twingate", Type: TypeCask, Category: "dev_env", Default: false, Description: "Zero trust network access platform"},
 		{Name: "amazon-workspaces", Type: TypeCask, Category: "dev_env", Default: false, Description: "Cloud native persistent desktop virtualization"},
 		{Name: "postman", Type: TypeCask, Category: "dev_env", Default: false, Description: "Collaboration platform for API development"},
 		{Name: "bruno", Type: TypeCask, Category: "dev_env", Default: false, Description: "Open source IDE for exploring and testing APIs"},
@@ -80,6 +77,7 @@ func AllPackages() []Package {
 
 		// Python
 		{Name: "poetry", Type: TypeFormula, Category: "programming", SubCategory: "python", Default: false, Description: "Python package management tool"},
+		{Name: "uv", Type: TypeFormula, Category: "programming", SubCategory: "python", Default: false, Description: "Extremely fast Python package installer and resolver"},
 		{Name: "ruff", Type: TypeFormula, Category: "programming", SubCategory: "python", Default: false, Description: "Extremely fast Python linter, written in Rust"},
 		{Name: "ty", Type: TypeFormula, Category: "programming", SubCategory: "python", Default: false, Description: "Extremely fast Python type checker, written in Rust"},
 		{Name: "black", Type: TypeFormula, Category: "programming", SubCategory: "python", Default: false, Description: "Python code formatter"},
@@ -116,9 +114,6 @@ func AllPackages() []Package {
 		{Name: "codex", Type: TypeCask, Category: "ai", Default: false, Description: "OpenAI's coding agent that runs in your terminal"},
 		{Name: "chatgpt", Type: TypeCask, Category: "ai", Default: false, Description: "OpenAI's official ChatGPT desktop app"},
 		{Name: "claude", Type: TypeCask, Category: "ai", Default: false, Description: "Anthropic's official Claude AI desktop app"},
-
-		// Communication
-		{Name: "microsoft-teams", Type: TypeCask, Category: "communication", Default: false, Description: "Meet, chat, call, and collaborate in just one place"},
 
 		// Optional
 		{Name: "1password", Type: TypeCask, Category: "optional", Default: false, Description: "Password manager that keeps all passwords secure behind one password"},

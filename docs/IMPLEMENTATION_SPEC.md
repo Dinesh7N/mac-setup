@@ -319,16 +319,9 @@ mac-setup/
 │  ├── CLI: gemini-cli, claude-code, codex                            │
 │  └── Apps: ChatGPT, Claude                                          │
 │                                                                     │
-│  COMMUNICATION (Default: OFF, selectable)                           │
-│  └── Microsoft Teams                                                │
-│                                                                     │
 │  OPTIONAL APPS (Default: OFF, selectable)                           │
 │  ├── 1Password + 1Password CLI                                      │
 │  └── Spotify                                                        │
-│                                                                     │
-│  FONTS (Default: ON, no individual selection)                       │
-│  ├── SF Mono                                                        │
-│  └── SF Pro                                                         │
 │                                                                     │
 └────────────────────────────────────────────────────────────────────┘
 ```
@@ -459,12 +452,6 @@ mac-setup/
 | chatgpt | cask | OFF |
 | claude | cask | OFF |
 
-#### Communication
-
-| Package | Type | Default |
-|---------|------|---------|
-| microsoft-teams | cask | OFF |
-
 #### Optional Apps
 
 | Package | Type | Default |
@@ -472,13 +459,6 @@ mac-setup/
 | 1password | cask | OFF |
 | 1password-cli | cask | OFF |
 | spotify | cask | OFF |
-
-#### Fonts
-
-| Package | Type | Default |
-|---------|------|---------|
-| font-sf-mono | cask | ON |
-| font-sf-pro | cask | ON |
 
 ---
 
