@@ -70,6 +70,10 @@ type Model struct {
 	logger io.Writer
 
 	previousState AppState
+
+	// Some installers (like Homebrew bootstrap) write directly to terminal.
+	// Pause Bubble Tea spinner updates while they run to avoid screen corruption.
+	suspendSpinner bool
 }
 
 type listItem struct {
@@ -143,7 +147,11 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.KeyMsg:
 		return m.handleKey(msg)
 	case installer.ProgressUpdate:
+		wasSuspended := m.suspendSpinner
 		m = m.applyUpdate(msg)
+		if wasSuspended && !m.suspendSpinner {
+			return m, tea.Batch(m.waitForUpdate(), m.spin.Tick)
+		}
 		return m, m.waitForUpdate()
 	case installStartedMsg:
 		m.progressUpdates = msg.updates
@@ -190,6 +198,9 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	}
 
 	if m.state == StateInstalling || m.state == StateScanning {
+		if m.suspendSpinner {
+			return m, nil
+		}
 		var cmd tea.Cmd
 		m.spin, cmd = m.spin.Update(msg)
 		return m, cmd
@@ -474,18 +485,27 @@ func (m Model) applyUpdate(upd installer.ProgressUpdate) Model {
 
 	switch upd.Status {
 	case installer.StatusRunning:
+		if pkgName == "Homebrew" {
+			m.suspendSpinner = true
+		}
 		// Remove from other states if present
 		delete(m.installedPackages, pkgName)
 		delete(m.failedPackages, pkgName)
 		// Add to running
 		m.runningPackages[pkgName] = upd.Message
 	case installer.StatusInstalled, installer.StatusSkipped:
+		if pkgName == "Homebrew" {
+			m.suspendSpinner = false
+		}
 		// Remove from running
 		delete(m.runningPackages, pkgName)
 		// Add to installed
 		m.installedPackages[pkgName] = upd.Message
 		m.completedPackages++
 	case installer.StatusFailed:
+		if pkgName == "Homebrew" {
+			m.suspendSpinner = false
+		}
 		// Remove from running
 		delete(m.runningPackages, pkgName)
 		// Add to failed

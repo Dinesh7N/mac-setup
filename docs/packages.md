@@ -8,7 +8,6 @@ Reference list of Homebrew packages used by this repo.
 | `1password-cli` | `cask` | `optional` | `` | Command-line interface for 1Password | https://formulae.brew.sh/cask/1password-cli |
 | `amazon-workspaces` | `cask` | `dev_env` | `` | Cloud native persistent desktop virtualization | https://formulae.brew.sh/cask/amazon-workspaces |
 | `ansible` | `formula` | `devops` | `` | Automate deployment, configuration, and upgrading | https://formulae.brew.sh/formula/ansible |
-| `autojump` | `formula` | `shell_cli` | `` | Shell extension to jump to frequently used directories | https://formulae.brew.sh/formula/autojump |
 | `awscli` | `formula` | `devops` | `` | Official Amazon AWS command-line interface | https://formulae.brew.sh/formula/awscli |
 | `biome` | `formula` | `programming` | `nodejs` | Toolchain of the web | https://formulae.brew.sh/formula/biome |
 | `black` | `formula` | `programming` | `python` | Python code formatter | https://formulae.brew.sh/formula/black |
@@ -23,6 +22,7 @@ Reference list of Homebrew packages used by this repo.
 | `codex` | `cask` | `ai` | `` | OpenAI's coding agent that runs in your terminal | https://formulae.brew.sh/cask/codex |
 | `deno` | `formula` | `programming` | `nodejs` | Secure runtime for JavaScript and TypeScript | https://formulae.brew.sh/formula/deno |
 | `eslint` | `formula` | `programming` | `nodejs` | AST-based pattern checker for JavaScript | https://formulae.brew.sh/formula/eslint |
+| `fd` | `formula` | `shell_cli` | `` | Simple, fast and user-friendly alternative to find | https://formulae.brew.sh/formula/fd |
 | `firefox` | `cask` | `browsers` | `` | Web browser | https://formulae.brew.sh/cask/firefox |
 | `fzf` | `formula` | `shell_cli` | `` | Command-line fuzzy finder written in Go | https://formulae.brew.sh/formula/fzf |
 | `gemini-cli` | `formula` | `ai` | `` | Interact with Google Gemini AI models from the command-line | https://formulae.brew.sh/formula/gemini-cli |
@@ -70,6 +70,7 @@ Reference list of Homebrew packages used by this repo.
 | `visual-studio-code` | `cask` | `editors` | `` | Open-source code editor | https://formulae.brew.sh/cask/visual-studio-code |
 | `zed` | `cask` | `editors` | `` | Multiplayer code editor | https://formulae.brew.sh/cask/zed |
 | `zellij` | `formula` | `shell_cli` | `` | Pluggable terminal workspace, with terminal multiplexer as the base feature | https://formulae.brew.sh/formula/zellij |
+| `zoxide` | `formula` | `shell_cli` | `` | Smarter cd command, inspired by z and autojump | https://formulae.brew.sh/formula/zoxide |
 | `zsh` | `formula` | `shell_cli` | `` | UNIX shell (command interpreter) | https://formulae.brew.sh/formula/zsh |
 
 Generated from `internal/config/packages.go`.
