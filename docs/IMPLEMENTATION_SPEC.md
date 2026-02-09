@@ -264,7 +264,7 @@ mac-setup/
 │                                                                     │
 │  SHELL & CLI (Required - No opt-out)                                │
 │  ├── Shell: Oh My Zsh + plugins, Starship, Zsh                      │
-│  └── Utils: ripgrep, fzf, jq, httpie, autojump, tree, htop,         │
+│  └── Utils: ripgrep, fzf, fd, jq, httpie, zoxide, tree, htop,       │
 │             gh, telnet, ca-certificates, mise, neovim, tmux         │
 │                                                                     │
 │  TERMINALS (Default: ON, can customize)                             │
@@ -350,7 +350,8 @@ mac-setup/
 | fzf | formula | - | Fuzzy finder |
 | jq | formula | - | JSON processor |
 | httpie | formula | - | HTTP client |
-| autojump | formula | - | Directory jumper |
+| fd | formula | - | Fast, user-friendly find alternative |
+| zoxide | formula | - | Smart directory jumper |
 | tree | formula | - | Directory tree |
 | htop | formula | - | Process viewer |
 | gh | formula | - | GitHub CLI |
@@ -405,6 +406,7 @@ mac-setup/
 | Package | Type | Default |
 |---------|------|---------|
 | poetry | formula | OFF |
+| uv | formula | OFF |
 | ruff | formula | OFF |
 | ty | formula | OFF |
 

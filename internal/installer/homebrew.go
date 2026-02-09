@@ -46,6 +46,7 @@ func InstallBrew(ctx context.Context, verbose bool) error {
 	}()
 
 	cmd := exec.CommandContext(ctx, "/bin/bash", script)
+	cmd.Env = append(os.Environ(), "NONINTERACTIVE=1")
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
